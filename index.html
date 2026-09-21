@@ -38,6 +38,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js for Trend Analytics & Reporting Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -92,7 +94,7 @@
         </div>
     </div>
 
-    <!-- AI Agenda Briefing Modal -->
+    <!-- Executive Briefing Modal -->
     <div id="briefing-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl border border-cyan-200 shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden">
             <div class="bg-cyan-900 text-white p-4 border-b border-cyan-800 flex items-center justify-between flex-none">
@@ -332,6 +334,9 @@
                     <button onclick="setStatusFilter('LATE')" id="filter-btn-LATE" class="px-2.5 py-1 rounded-md bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs flex items-center gap-1">
                         <i data-lucide="clock" class="w-3 h-3 text-rose-500"></i> Late Only
                     </button>
+                    <button onclick="setStatusFilter('BIWEEKLY_TRENDS')" id="filter-btn-BIWEEKLY_TRENDS" class="px-2.5 py-1 rounded-md bg-white border border-cyan-200 text-slate-700 hover:bg-cyan-50 text-xs flex items-center gap-1">
+                        <i data-lucide="trending-up" class="w-3 h-3 text-cyan-600"></i> Biweekly Trends
+                    </button>
                 </div>
             </div>
 
@@ -359,9 +364,66 @@
                     <div id="cr-cards-container" class="space-y-3">
                         <!-- Dynamic CR cards -->
                     </div>
+
+                    <!-- Biweekly Trends & Analytics Dashboard View -->
+                    <div id="biweekly-trends-container" class="hidden space-y-6 max-w-6xl mx-auto">
+                        <div class="bg-cyan-900 text-white p-5 rounded-2xl shadow-md border border-cyan-800 flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                                <h2 class="text-base font-bold flex items-center gap-2">
+                                    <i data-lucide="line-chart" class="w-5 h-5 text-cyan-300"></i> Biweekly Change Queue Trend Analytics
+                                </h2>
+                                <p class="text-xs text-cyan-200 mt-1">2-Week interval analysis tracking submission volume, classification trends, and lead-time cutoff compliance.</p>
+                            </div>
+                            <span class="bg-cyan-800 text-cyan-200 border border-cyan-700 text-[11px] px-3 py-1 rounded-lg font-mono">14-Day Cycle Aggregation</span>
+                        </div>
+
+                        <!-- Metric Highlight Cards -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="bg-white p-4 rounded-xl border border-cyan-200 shadow-sm space-y-1">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Avg Biweekly Volume</span>
+                                <div id="biweekly-metric-avg" class="text-xl font-extrabold text-cyan-950">0</div>
+                                <p class="text-[10px] text-slate-500">Average CRs per 2-week window</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl border border-cyan-200 shadow-sm space-y-1">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Peak Biweekly Window</span>
+                                <div id="biweekly-metric-peak" class="text-xl font-extrabold text-cyan-700">None</div>
+                                <p class="text-[10px] text-slate-500">Highest submission volume period</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl border border-cyan-200 shadow-sm space-y-1">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Late Submission Rate</span>
+                                <div id="biweekly-metric-late-rate" class="text-xl font-extrabold text-rose-600">0%</div>
+                                <p class="text-[10px] text-slate-500">Missed 6 AM EST CAB cutoff</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl border border-cyan-200 shadow-sm space-y-1">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Standard Change Ratio</span>
+                                <div id="biweekly-metric-std-ratio" class="text-xl font-extrabold text-emerald-600">0%</div>
+                                <p class="text-[10px] text-slate-500">Pre-approved routine implementations</p>
+                            </div>
+                        </div>
+
+                        <!-- Graphical Charts Grid -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-2xl border border-cyan-200 p-5 shadow-sm space-y-3">
+                                <h3 class="text-xs font-bold text-cyan-950 uppercase tracking-wider flex items-center gap-2 border-b border-cyan-100 pb-2">
+                                    <i data-lucide="bar-chart-2" class="w-4 h-4 text-cyan-600"></i> Biweekly Volume & Change Type Distribution
+                                </h3>
+                                <div class="h-64 relative">
+                                    <canvas id="chart-biweekly-volume"></canvas>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-2xl border border-cyan-200 p-5 shadow-sm space-y-3">
+                                <h3 class="text-xs font-bold text-cyan-950 uppercase tracking-wider flex items-center gap-2 border-b border-cyan-100 pb-2">
+                                    <i data-lucide="clock" class="w-4 h-4 text-rose-500"></i> Biweekly Late Submission & Compliance Trend
+                                </h3>
+                                <div class="h-64 relative">
+                                    <canvas id="chart-biweekly-late"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- TAB 2: Urgent / Emergency Change Review (NEW) -->
+                <!-- TAB 2: Urgent / Emergency Change Review -->
                 <div id="tab-view-urgent-emergency" class="hidden space-y-6 max-w-6xl mx-auto text-slate-800">
                     
                     <!-- Header Banner -->
@@ -390,144 +452,289 @@
                         </div>
                     </div>
 
-                    <!-- Policy Banner -->
-                    <div id="urgent-policy-banner" class="p-4 rounded-xl border bg-amber-50/80 border-amber-300 text-amber-950 text-xs space-y-1">
-                        <div class="font-bold text-amber-900 flex items-center gap-2">
-                            <i data-lucide="shield-alert" class="w-4 h-4 text-amber-700"></i> Urgent Change Policy Mandate:
+                    <!-- Urgent Sub-Navigation Tabs -->
+                    <div class="flex items-center justify-between border-b border-cyan-200 pb-2">
+                        <div class="flex gap-2">
+                            <button onclick="switchUrgentSubTab('assessment')" id="urgent-subnav-assessment" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-cyan-800 text-white shadow">
+                                <i data-lucide="clipboard-check" class="w-4 h-4"></i> Intake & Assessment Form
+                            </button>
+                            <button onclick="switchUrgentSubTab('approved-log')" id="urgent-subnav-approved" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white border border-cyan-200 text-slate-700 hover:bg-cyan-50">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i> Approved Urgent/Emergency Log
+                                <span id="badge-approved-urgent-log" class="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+                            </button>
+                            <button onclick="switchUrgentSubTab('monthly-trends')" id="urgent-subnav-trends" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white border border-cyan-200 text-slate-700 hover:bg-cyan-50">
+                                <i data-lucide="line-chart" class="w-4 h-4 text-rose-500"></i> Monthly Trends & Analytics
+                            </button>
                         </div>
-                        <p class="leading-relaxed">
-                            Urgent Changes are time-critical changes required to proceed at an accelerated pace (&lt; 24hr lead time). <strong>CRITICAL POLICY RULE:</strong> Utilizing Urgent Change because of an administrative issue (e.g., forgotten request, poor planning, missed cutoff) is <u>strictly prohibited</u> and will be rejected. Testing must be completed in lower environments (UAT/QA) prior to production execution.
-                        </p>
+
+                        <button id="export-urgent-log-btn" onclick="exportApprovedUrgentCRs()" class="hidden bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5 shadow-sm">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-200"></i> Export Monthly Approved Log (XLSX)
+                        </button>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        
-                        <!-- Left Panel: Ticket Screenshot Paste / Drop Zone & AI Vision Scanner -->
-                        <div class="lg:col-span-5 space-y-4">
-                            <div class="bg-white rounded-2xl border border-cyan-200 p-4 shadow-sm space-y-3">
-                                <div class="flex items-center justify-between border-b border-cyan-100 pb-2">
-                                    <h3 class="text-xs font-bold text-cyan-950 flex items-center gap-1.5 uppercase tracking-wider">
-                                        <i data-lucide="image" class="w-4 h-4 text-cyan-600"></i> Ticket Screenshot Intake
-                                    </h3>
-                                    <span class="text-[10px] bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded font-mono">Clipboard / Paste Box</span>
-                                </div>
+                    <!-- SUB-VIEW 1: ASSESSMENT & INTAKE -->
+                    <div id="urgent-view-assessment">
+                        <!-- Policy Banner -->
+                        <div id="urgent-policy-banner" class="p-4 rounded-xl border bg-amber-50/80 border-amber-300 text-amber-950 text-xs space-y-1 mb-6">
+                            <div class="font-bold text-amber-900 flex items-center gap-2">
+                                <i data-lucide="shield-alert" class="w-4 h-4 text-amber-700"></i> Urgent Change Policy Mandate:
+                            </div>
+                            <p class="leading-relaxed">
+                                Urgent Changes are time-critical changes required to proceed at an accelerated pace (&lt; 24hr lead time). <strong>CRITICAL POLICY RULE:</strong> Utilizing Urgent Change because of an administrative issue (e.g., forgotten request, poor planning, missed cutoff) is <u>strictly prohibited</u> and will be rejected. Testing must be completed in lower environments (UAT/QA) prior to production execution.
+                            </p>
+                        </div>
 
-                                <p class="text-[11px] text-slate-600">
-                                    Paste a screenshot of your ServiceNow ticket, Major Incident bridge, or UAT test evidence box below (Press <strong>Ctrl+V</strong> or click to browse image).
-                                </p>
-
-                                <!-- Screenshot Drop / Paste Zone -->
-                                <div id="screenshot-paste-zone" tabindex="0" onclick="document.getElementById('screenshot-file-input').click()" class="border-2 border-dashed border-cyan-300 hover:border-cyan-500 bg-cyan-50/40 hover:bg-cyan-50 transition rounded-xl p-6 text-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-500 relative min-h-[160px] flex flex-col items-center justify-center space-y-2">
-                                    <input type="file" id="screenshot-file-input" accept="image/*" class="hidden" onchange="handleScreenshotUpload(event)">
-                                    
-                                    <div id="paste-prompt" class="space-y-1">
-                                        <div class="w-10 h-10 bg-cyan-100 text-cyan-700 rounded-full flex items-center justify-center mx-auto">
-                                            <i data-lucide="clipboard" class="w-5 h-5"></i>
-                                        </div>
-                                        <div class="text-xs font-bold text-cyan-900">Paste Screenshot Here (Ctrl+V)</div>
-                                        <div class="text-[10px] text-slate-500">or click to browse image file</div>
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                            
+                            <!-- LEFT PANEL: Ticket Screenshot Intake & OCR Scanner (lg:col-span-5) -->
+                            <div class="lg:col-span-5 space-y-4">
+                                <div class="bg-white rounded-2xl border border-cyan-200 p-5 shadow-sm space-y-4">
+                                    <div class="flex items-center justify-between border-b border-cyan-100 pb-3">
+                                        <h3 class="text-xs font-bold text-cyan-950 uppercase tracking-wider flex items-center gap-2">
+                                            <i data-lucide="image" class="w-4 h-4 text-cyan-600"></i> Ticket Screenshots & Evidence
+                                        </h3>
+                                        <span id="screenshot-count-badge" class="bg-cyan-100 text-cyan-800 text-[10px] font-bold px-2 py-0.5 rounded-full">0 Image(s) Attached</span>
                                     </div>
 
-                                    <img id="screenshot-preview" class="hidden max-h-48 rounded-lg border border-cyan-300 shadow-sm object-contain" alt="Pasted Ticket Screenshot">
-                                </div>
+                                    <!-- Quick Load CR Dropdown -->
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Select Active CR from Queue (Optional):</label>
+                                        <select id="urgent-cr-select" onchange="loadCRIntoUrgentForm(this.value)" class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50 text-xs focus:ring-2 focus:ring-cyan-500 font-mono text-slate-800">
+                                            <option value="">-- Choose active Change Request --</option>
+                                        </select>
+                                    </div>
 
-                                <div class="flex gap-2">
-                                    <button onclick="scanScreenshotWithAI()" id="ai-scan-btn" class="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white font-bold py-2 px-3 rounded-lg text-xs shadow transition flex items-center justify-center gap-2">
-                                        <i data-lucide="sparkles" class="w-4 h-4 text-cyan-200"></i> AI Scan Ticket Screenshot (Gemini)
-                                    </button>
-                                    <button onclick="clearScreenshot()" id="clear-img-btn" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-3 rounded-lg text-xs transition">
-                                        Clear
-                                    </button>
+                                    <p class="text-[11px] text-slate-600 leading-relaxed">
+                                        Paste screenshots of your ServiceNow ticket, Major Incident bridge, or UAT test evidence (Press <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded text-[10px] font-mono text-slate-700 font-bold">Ctrl + V</kbd> repeatedly or drop image files below).
+                                    </p>
+
+                                    <!-- Spacious Drop / Paste Zone -->
+                                    <div id="screenshot-paste-zone" tabindex="0" onclick="document.getElementById('screenshot-file-input').click()" class="border-2 border-dashed border-cyan-300 hover:border-cyan-500 bg-cyan-50/40 hover:bg-cyan-50/80 transition-all duration-200 rounded-xl p-5 text-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-500 relative min-h-[170px] flex flex-col items-center justify-center space-y-2 group">
+                                        <input type="file" id="screenshot-file-input" accept="image/*" multiple class="hidden" onchange="handleScreenshotUpload(event)">
+                                        
+                                        <div id="paste-prompt" class="space-y-2 py-2">
+                                            <div class="w-12 h-12 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+                                                <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs font-bold text-cyan-950">Click, Drag & Drop, or Paste Screenshots</p>
+                                                <p class="text-[10px] text-slate-500 mt-0.5">Press <span class="font-mono bg-cyan-100 px-1 rounded text-cyan-900 font-semibold">Ctrl + V</span> anywhere on this box</p>
+                                            </div>
+                                            <span class="inline-block text-[9px] bg-white border border-cyan-200 text-cyan-800 px-2 py-0.5 rounded-full font-medium">Supports PNG, JPG, WebP</span>
+                                        </div>
+
+                                        <div id="screenshot-gallery" class="hidden grid grid-cols-2 gap-2 w-full pt-1">
+                                            <!-- Dynamic screenshot preview thumbnails -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Actions Toolbar -->
+                                    <div class="flex items-center gap-2 pt-1">
+                                        <button id="ai-scan-btn" onclick="scanScreenshotWithAI()" class="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white font-bold py-2.5 px-3 rounded-xl text-xs transition shadow flex items-center justify-center gap-2 border border-cyan-300/30">
+                                            <i data-lucide="sparkles" class="w-4 h-4 text-cyan-200"></i> AI Scan Screenshots (Gemini)
+                                        </button>
+                                        <button id="clear-img-btn" onclick="clearScreenshot()" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2.5 rounded-xl text-xs font-medium transition flex items-center gap-1 border border-slate-200">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-500"></i> Clear
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Quick Select from Loaded CR Queue -->
-                            <div class="bg-white rounded-2xl border border-cyan-200 p-4 shadow-sm space-y-2">
-                                <label class="block text-xs font-bold text-cyan-950 uppercase tracking-wider">Select CR From Queue (Optional):</label>
-                                <select id="urgent-cr-select" onchange="loadCRIntoUrgentForm(this.value)" class="w-full p-2 text-xs border border-cyan-200 rounded-lg bg-slate-50 font-medium">
-                                    <option value="">-- Choose active Change Request --</option>
-                                </select>
+                            <!-- RIGHT PANEL: Mandatory ITIL RTI & 5-Part Planning Checklist (lg:col-span-7) -->
+                            <div class="lg:col-span-7 space-y-4">
+                                <div class="bg-white rounded-2xl border border-cyan-200 p-5 shadow-sm space-y-4">
+                                    <div class="flex items-center justify-between border-b border-cyan-100 pb-3">
+                                        <h3 class="text-xs font-bold text-cyan-950 uppercase tracking-wider flex items-center gap-2">
+                                            <i data-lucide="file-check-2" class="w-4 h-4 text-cyan-600"></i> ITIL Urgent/Emergency 5-Part Planning & RTI Evaluation
+                                        </h3>
+                                        <span id="rti-status-badge" class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded">Draft Assessment</span>
+                                    </div>
+
+                                    <form id="rti-form" onsubmit="evaluateUrgentGovernance(event)" class="space-y-3.5 text-xs">
+                                        <!-- SECTION 1: CR HEADER & TRIGGER -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-cyan-50/50 p-3 rounded-xl border border-cyan-100">
+                                            <div>
+                                                <label class="block font-bold text-slate-800 mb-1">1. CR Number & Title:</label>
+                                                <input type="text" id="rti-cr-number" placeholder="CHG000000 | Brief Title" class="w-full p-2 border border-cyan-200 rounded-lg bg-white focus:ring-2 focus:ring-cyan-500 font-mono">
+                                            </div>
+                                            <div>
+                                                <label class="block font-bold text-slate-800 mb-1">2. Trigger Source:</label>
+                                                <select id="rti-trigger" class="w-full p-2 border border-cyan-200 rounded-lg bg-white focus:ring-2 focus:ring-cyan-500 font-medium">
+                                                    <option value="Incident">Major Incident (P1/P2)</option>
+                                                    <option value="Security">Security Vulnerability / CVE Threat</option>
+                                                    <option value="BusinessDeadline">Hard Business Deadline / Compliance</option>
+                                                    <option value="Administrative">Administrative / Missed Cutoff (Prohibited)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- SECTION 2: JUSTIFICATION & RTI 7 QUESTIONS -->
+                                        <div class="space-y-2 border-t border-cyan-100 pt-2">
+                                            <div class="text-[10px] font-bold text-cyan-900 uppercase tracking-wider flex items-center gap-1.5">
+                                                <span class="w-2 h-2 rounded-full bg-cyan-600"></span> 1. Business Justification & ITIL RTI Questions
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block font-bold text-slate-800 mb-1">Why is this Urgent/Emergency vs. Normal Change?</label>
+                                                <textarea id="rti-q1" rows="2" placeholder="Explain technical necessity for accelerated deployment..." class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-cyan-500"></textarea>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label class="block font-bold text-slate-800 mb-1">Delay Impact:</label>
+                                                    <textarea id="rti-q2" rows="2" placeholder="Detail financial, store operational, or system impact if delayed..." class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-cyan-500"></textarea>
+                                                </div>
+                                                <div>
+                                                    <label class="block font-bold text-slate-800 mb-1">Why Lead Time Not Met? (Admin Check):</label>
+                                                    <textarea id="rti-q3" rows="2" placeholder="Explain why the request could not follow regular CAB lead time..." class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-cyan-500"></textarea>
+                                                </div>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                                <div>
+                                                    <label class="block font-bold text-slate-800 mb-1">Can be Normal Change?</label>
+                                                    <select id="rti-q4" class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50">
+                                                        <option value="No">No - Requires Immediate Execution</option>
+                                                        <option value="Yes">Yes - Can Wait For Normal CAB Review</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block font-bold text-slate-800 mb-1">Stakeholder Communications:</label>
+                                                    <input type="text" id="rti-q5" placeholder="Stores, Corporate, Vendors" class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50">
+                                                </div>
+                                                <div>
+                                                    <label class="block font-bold text-slate-800 mb-1">Dependencies & Validation:</label>
+                                                    <input type="text" id="rti-q7" placeholder="Validated dependencies & team signoffs" class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- SECTION 3: STEP-BY-STEP IMPLEMENTATION PLAN -->
+                                        <div class="space-y-1 border-t border-cyan-100 pt-2">
+                                            <label class="block text-slate-800 font-bold flex items-center justify-between">
+                                                <span class="text-[10px] text-cyan-900 uppercase tracking-wider flex items-center gap-1.5">
+                                                    <span class="w-2 h-2 rounded-full bg-cyan-600"></span> 2. Implementation Plan (Mandatory Step-by-Step Guide)
+                                                </span>
+                                                <span class="text-[10px] text-slate-500 font-normal">Sequential numbered steps required</span>
+                                            </label>
+                                            <textarea id="rti-impl-plan" rows="3" placeholder="1. Stop application service...&#10;2. Apply software patch / execute command...&#10;3. Restart application and verify health logs..." class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-cyan-500 font-mono text-xs"></textarea>
+                                        </div>
+
+                                        <!-- SECTION 4: DETAILED RISK AND IMPACT ANALYSIS -->
+                                        <div class="space-y-1 border-t border-cyan-100 pt-2">
+                                            <label class="block text-[10px] font-bold text-cyan-900 uppercase tracking-wider flex items-center gap-1.5">
+                                                <span class="w-2 h-2 rounded-full bg-cyan-600"></span> 3. Risk & Impact Analysis (Detailed Narrative)
+                                            </label>
+                                            <textarea id="rti-risk-analysis" rows="2" placeholder="Describe potential blast radius, impacted store terminals, network downtime, and security exposure..." class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-cyan-500 text-xs"></textarea>
+                                        </div>
+
+                                        <!-- SECTION 5: STEP-BY-STEP BACKOUT PLAN -->
+                                        <div class="space-y-1 border-t border-cyan-100 pt-2">
+                                            <label class="block text-slate-800 font-bold flex items-center justify-between">
+                                                <span class="text-[10px] text-cyan-900 uppercase tracking-wider flex items-center gap-1.5">
+                                                    <span class="w-2 h-2 rounded-full bg-cyan-600"></span> 4. Backout / Rollback Plan (Step-by-Step Reversion Procedure)
+                                                </span>
+                                                <span class="text-[10px] text-slate-500 font-normal">Sequential rollback steps</span>
+                                            </label>
+                                            <textarea id="rti-backout-plan" rows="2" placeholder="1. Stop deployment process...&#10;2. Restore database/file snapshot from backup...&#10;3. Verify previous stable version operational..." class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-cyan-500 font-mono text-xs"></textarea>
+                                        </div>
+
+                                        <!-- SECTION 6: TEST & VALIDATION PLAN (LOWER ENV) -->
+                                        <div class="space-y-1 border-t border-cyan-100 pt-2">
+                                            <label class="block text-[10px] font-bold text-cyan-900 uppercase tracking-wider flex items-center gap-1.5">
+                                                <span class="w-2 h-2 rounded-full bg-cyan-600"></span> 5. Test & Validation Plan (Lower Env / QA Proof)
+                                            </label>
+                                            <textarea id="rti-q6" rows="2" placeholder="Detail pre-implementation testing in lower environments (UAT/QA) and post-deployment validation steps..." class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-cyan-500 text-xs"></textarea>
+                                        </div>
+
+                                        <div class="pt-2 flex flex-wrap items-center justify-end gap-2 border-t border-cyan-100">
+                                            <button type="button" onclick="promptGrantExemptionAndApprove()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
+                                                <i data-lucide="shield-alert" class="w-4 h-4 text-amber-100"></i> Grant Exemption & Force Approve
+                                            </button>
+                                            <button type="submit" class="bg-cyan-700 hover:bg-cyan-800 text-white font-bold py-2.5 px-5 rounded-xl text-xs shadow-md transition flex items-center gap-2">
+                                                <i data-lucide="shield-check" class="w-4 h-4"></i> Validate 5-Part Planning & ITIL Governance
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- Evaluation Result Output Box -->
+                                <div id="rti-eval-result" class="hidden bg-white rounded-2xl border p-5 shadow-sm space-y-3">
+                                    <!-- Dynamic evaluation decision result -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-VIEW 2: APPROVED URGENT/EMERGENCY LOG -->
+                    <div id="urgent-view-approved-log" class="hidden space-y-4">
+                        <div class="bg-white rounded-2xl border border-cyan-200 p-5 shadow-sm space-y-3">
+                            <div class="flex items-center justify-between border-b border-cyan-100 pb-3">
+                                <h3 class="text-xs font-bold text-cyan-950 uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="archive" class="w-4 h-4 text-emerald-600"></i> Approved & Logged Urgent/Emergency Changes
+                                </h3>
+                                <span class="text-[11px] text-slate-500">Persisted in browser local storage for monthly reporting</span>
+                            </div>
+
+                            <div id="approved-urgent-list-container" class="space-y-3">
+                                <!-- Dynamic approved urgent CR cards -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-VIEW 3: MONTHLY TRENDS & ANALYTICS FOR URGENT & EMERGENCY CHANGES -->
+                    <div id="urgent-view-monthly-trends" class="hidden space-y-6">
+                        <div class="bg-slate-900 text-white p-5 rounded-2xl shadow-md border border-rose-500/30 flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                                <h2 class="text-base font-bold flex items-center gap-2">
+                                    <i data-lucide="trending-up" class="w-5 h-5 text-rose-400"></i> Monthly Urgent & Emergency Change Analytics
+                                </h2>
+                                <p class="text-xs text-slate-300 mt-1">Monthly trend reporting tracking accelerated deployment frequency, trigger classifications, and policy abuse rates.</p>
+                            </div>
+                            <span class="bg-rose-950 border border-rose-700 text-rose-200 text-[11px] px-3 py-1 rounded-lg font-mono">Monthly Governance Audit</span>
+                        </div>
+
+                        <!-- Metric Cards -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="bg-white p-4 rounded-xl border border-cyan-200 shadow-sm space-y-1">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Urgent/Emergency</span>
+                                <div id="urgent-metric-total" class="text-xl font-extrabold text-cyan-950">0</div>
+                                <p class="text-[10px] text-slate-500">Total accelerated changes recorded</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl border border-cyan-200 shadow-sm space-y-1">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Major Incident Triggers</span>
+                                <div id="urgent-metric-incidents" class="text-xl font-extrabold text-rose-600">0</div>
+                                <p class="text-[10px] text-slate-500">P1/P2 Incident driven remediations</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl border border-cyan-200 shadow-sm space-y-1">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Security Vulnerability Ratio</span>
+                                <div id="urgent-metric-security" class="text-xl font-extrabold text-amber-600">0%</div>
+                                <p class="text-[10px] text-slate-500">CVE Threat & Patching triggers</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl border border-cyan-200 shadow-sm space-y-1">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Peak Month</span>
+                                <div id="urgent-metric-peak-month" class="text-xl font-extrabold text-slate-800">None</div>
+                                <p class="text-[10px] text-slate-500">Highest accelerated volume month</p>
                             </div>
                         </div>
 
-                        <!-- Right Panel: Mandatory ITIL RTI (Reason to Implement) 8-Question Form -->
-                        <div class="lg:col-span-7 space-y-4">
-                            <div class="bg-white rounded-2xl border border-cyan-200 p-5 shadow-sm space-y-4">
-                                <div class="flex items-center justify-between border-b border-cyan-100 pb-3">
-                                    <h3 class="text-xs font-bold text-cyan-950 uppercase tracking-wider flex items-center gap-2">
-                                        <i data-lucide="file-check-2" class="w-4 h-4 text-cyan-600"></i> ITIL Reason To Implement (RTI) Evaluation Checklist
-                                    </h3>
-                                    <span id="rti-status-badge" class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded">Draft Assessment</span>
+                        <!-- Charts Grid -->
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            <div class="lg:col-span-7 bg-white rounded-2xl border border-cyan-200 p-5 shadow-sm space-y-3">
+                                <h3 class="text-xs font-bold text-cyan-950 uppercase tracking-wider flex items-center gap-2 border-b border-cyan-100 pb-2">
+                                    <i data-lucide="bar-chart" class="w-4 h-4 text-cyan-600"></i> Monthly Volume Trend (Urgent vs Emergency)
+                                </h3>
+                                <div class="h-64 relative">
+                                    <canvas id="chart-urgent-monthly"></canvas>
                                 </div>
-
-                                <form id="rti-form" onsubmit="evaluateUrgentGovernance(event)" class="space-y-3.5 text-xs">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        <div>
-                                            <label class="block font-bold text-slate-800 mb-1">1. CR Number & Title:</label>
-                                            <input type="text" id="rti-cr-number" placeholder="CHG000000 | Brief Title" class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-cyan-500 font-mono">
-                                        </div>
-                                        <div>
-                                            <label class="block font-bold text-slate-800 mb-1">2. Trigger Source:</label>
-                                            <select id="rti-trigger" class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-cyan-500">
-                                                <option value="Incident">Major Incident (P1/P2)</option>
-                                                <option value="Security">Security Vulnerability / CVE Threat</option>
-                                                <option value="BusinessDeadline">Hard Business Deadline / Compliance</option>
-                                                <option value="Administrative">Administrative / Missed Cutoff (Prohibited)</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label class="block font-bold text-slate-800 mb-1">3. Why is this Urgent/Emergency vs. Normal Change?</label>
-                                        <textarea id="rti-q1" rows="2" placeholder="Explain technical necessity for accelerated deployment..." class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-cyan-500"></textarea>
-                                    </div>
-
-                                    <div>
-                                        <label class="block font-bold text-slate-800 mb-1">4. What is the impact if this change is delayed?</label>
-                                        <textarea id="rti-q2" rows="2" placeholder="Detail financial, store operational, or system stability impact..." class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-cyan-500"></textarea>
-                                    </div>
-
-                                    <div>
-                                        <label class="block font-bold text-slate-800 mb-1">5. Why could standard lead times not be met? (Administrative Check)</label>
-                                        <textarea id="rti-q3" rows="2" placeholder="Explain why the request could not be planned during regular CAB lead times..." class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-cyan-500"></textarea>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        <div>
-                                            <label class="block font-bold text-slate-800 mb-1">6. Can this be a Normal Change?</label>
-                                            <select id="rti-q4" class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50">
-                                                <option value="No">No - Requires Immediate Execution</option>
-                                                <option value="Yes">Yes - Can Wait For Normal CAB Review</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block font-bold text-slate-800 mb-1">7. Stakeholder Communications:</label>
-                                            <input type="text" id="rti-q5" placeholder="Impacted groups (e.g. Stores, Corporate, Vendors)" class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50">
-                                        </div>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        <div>
-                                            <label class="block font-bold text-slate-800 mb-1">8. Testing Environments & Evidence:</label>
-                                            <input type="text" id="rti-q6" placeholder="Tested in QA/UAT? Lower environment proof" class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50">
-                                        </div>
-                                        <div>
-                                            <label class="block font-bold text-slate-800 mb-1">9. Dependencies & Validation:</label>
-                                            <input type="text" id="rti-q7" placeholder="Validated dependencies and results" class="w-full p-2 border border-cyan-200 rounded-lg bg-slate-50">
-                                        </div>
-                                    </div>
-
-                                    <div class="pt-2 flex justify-end gap-2">
-                                        <button type="submit" class="bg-cyan-700 hover:bg-cyan-800 text-white font-bold py-2.5 px-5 rounded-xl text-xs shadow-md transition flex items-center gap-2">
-                                            <i data-lucide="shield-check" class="w-4 h-4"></i> Validate ITIL Governance & Policy
-                                        </button>
-                                    </div>
-                                </form>
                             </div>
-
-                            <!-- Evaluation Result Output Box -->
-                            <div id="rti-eval-result" class="hidden bg-white rounded-2xl border p-5 shadow-sm space-y-3">
-                                <!-- Dynamic evaluation decision result -->
+                            <div class="lg:col-span-5 bg-white rounded-2xl border border-cyan-200 p-5 shadow-sm space-y-3">
+                                <h3 class="text-xs font-bold text-cyan-950 uppercase tracking-wider flex items-center gap-2 border-b border-cyan-100 pb-2">
+                                    <i data-lucide="pie-chart" class="w-4 h-4 text-rose-500"></i> Trigger Source Distribution
+                                </h3>
+                                <div class="h-64 relative flex items-center justify-center">
+                                    <canvas id="chart-urgent-trigger"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -570,7 +777,7 @@
                                 <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
                             </div>
                             <h4 class="text-xs font-bold text-slate-800">Pre-Approved Routine</h4>
-                            <p class="text-[11px] text-slate-600">Low risk, repeatable change with proven track record (≥ 3 successful non-standard implementations). Requires 1 peer review prior to execution.</p>
+                            <p class="text-[11px] text-slate-600">Low risk, repeatable change with proven track record (&ge; 3 successful non-standard implementations). Requires 1 peer review prior to execution.</p>
                             <div class="text-[10px] bg-slate-100 p-2 rounded text-slate-700"><strong>Lead Time:</strong> Pre-authorized / 1 day</div>
                         </div>
 
@@ -755,7 +962,7 @@
                         <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-cyan-900 rounded-full"></span>
                     </div>
                     <div>
-                        <h3 class="text-xs font-bold text-white leading-tight">Alex &bull; Co-Change Manager</h3>
+                        <h3 class="text-xs font-bold text-white leading-tight">Kimmy &bull; Co-Change Manager</h3>
                         <p class="text-[10px] text-cyan-200">Gemini 3 Flash Governance Intelligence</p>
                     </div>
                 </div>
@@ -791,7 +998,7 @@
                 <div class="flex items-start space-x-2">
                     <div class="w-6 h-6 rounded-full bg-cyan-700 text-white flex-none flex items-center justify-center text-[10px] font-bold">AI</div>
                     <div class="bg-cyan-50 border border-cyan-200 text-slate-800 p-2.5 rounded-xl rounded-tl-none max-w-[85%] space-y-1">
-                        <p class="font-semibold text-cyan-900">Hello Partner! I'm Alex, your Co-Change Manager.</p>
+                        <p class="font-semibold text-cyan-900">Hello Partner! I'm Kimmy, your Co-Change Manager.</p>
                         <p class="text-[11px] text-slate-600">I am connected live to Gemini 3 Flash and actively monitoring our CAB agenda. Ask me to evaluate CRs, check lead times, evaluate Urgent/Emergency RTI evidence, or look up external software vulnerabilities!</p>
                     </div>
                 </div>
@@ -799,7 +1006,7 @@
 
             <div class="p-3 bg-white border-t border-cyan-100 flex-none space-y-2">
                 <form id="chat-form" onsubmit="handleChatSubmit(event)" class="flex items-center gap-2">
-                    <input type="text" id="chat-input" placeholder="Ask Alex anything about CRs or governance..." class="flex-1 px-3 py-2 text-xs border border-cyan-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-50">
+                    <input type="text" id="chat-input" placeholder="Ask Kimmy anything about CRs or governance..." class="flex-1 px-3 py-2 text-xs border border-cyan-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-50">
                     <button type="submit" id="chat-send-btn" class="bg-cyan-600 hover:bg-cyan-700 text-white p-2 rounded-lg transition shadow-sm flex items-center justify-center">
                         <i data-lucide="send" class="w-4 h-4"></i>
                     </button>
@@ -812,41 +1019,221 @@
     </main>
 
     <script>
-        // Global Application State
-        let changeRequests = [];
-        let auditRequests = []; // Dedicated audit dataset
-        let closableRequests = []; // Dedicated closable dataset
-        let reviewerNotesStore = {};
-        let auditScoresStore = {};
-        let strikeStore = {};
-        let currentFilterStatus = 'ALL';
-        let activeMainTab = 'board';
-        let activeAssigneeTab = null;
-        let activeAuditAssigneeTab = 'ALL';
-        let activeClosableAssigneeTab = 'ALL';
-        let activeUrgentClass = 'Urgent'; // 'Urgent' or 'Emergency'
-        let currentPastedImageBase64 = null;
-        let lastGeneratedBriefingText = "";
-        let isSpeaking = false;
-        let currentUtterance = null;
+        async function fetchWithExponentialBackoff(url, options, maxRetries = 3) {
+            let delay = 1000;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const res = await fetch(url, options);
+                    if (res.status === 429 || res.status >= 500) {
+                        if (i === maxRetries - 1) return res;
+                        await new Promise(r => setTimeout(r, delay));
+                        delay *= 2;
+                        continue;
+                    }
+                    return res;
+                } catch (err) {
+                    if (i === maxRetries - 1) throw err;
+                    await new Promise(r => setTimeout(r, delay));
+                    delay *= 2;
+                }
+            }
+        }
 
-        // Gemini API Key Store
-        window.userGeminiApiKey = localStorage.getItem('valvoline_gemini_key') || "";
+        async function callGeminiAPI(prompt, systemInstruction = "", useSearch = false) {
+            const apiKey = window.userGeminiApiKey || "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
-        // Notification Banner Display Helper
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }]
+            };
+
+            if (systemInstruction) {
+                payload.systemInstruction = { parts: [{ text: systemInstruction }] };
+            }
+
+            if (useSearch) {
+                payload.tools = [{ "google_search": {} }];
+            }
+
+            try {
+                const res = await fetchWithExponentialBackoff(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) throw new Error(`Gemini API Error: ${res.statusText}`);
+
+                const data = await res.json();
+                const candidate = data.candidates?.[0];
+                const text = candidate?.content?.parts?.[0]?.text || "No response generated.";
+                
+                let sources = [];
+                const metadata = candidate?.groundingMetadata;
+                if (metadata && metadata.groundingAttributions) {
+                    sources = metadata.groundingAttributions
+                        .map(attr => ({ uri: attr.web?.uri, title: attr.web?.title }))
+                        .filter(s => s.uri && s.title);
+                }
+
+                return { text, sources };
+            } catch (err) {
+                console.error("Gemini API call failed:", err);
+                return { text: `⚠️ AI Assistant Error: ${err.message}. Please verify API key connectivity.`, sources: [] };
+            }
+        }
+
+        async function aiAutoAuditAllCRs() {
+            const dataset = auditRequests.length > 0 ? auditRequests : changeRequests;
+            if (dataset.length === 0) {
+                showNotification("No CRs loaded to audit. Upload an Audit XLSX file first.", true);
+                return;
+            }
+
+            showNotification(`AI Auto-Auditing ${dataset.length} Change Requests with Gemini 3 Flash...`);
+
+            const apiKey = window.userGeminiApiKey || "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const crSummaries = dataset.slice(0, 15).map(cr => ({
+                number: cr.Number,
+                assignee: cr['Assigned to'] || 'Unassigned',
+                title: cr['Short description'] || '',
+                justification: cr.Justification || '',
+                implPlan: cr['Implementation plan'] || '',
+                riskAnalysis: cr['Risk and impact analysis'] || '',
+                backoutPlan: cr['Backout plan'] || '',
+                testPlan: cr['Test plan'] || '',
+                plannedStart: cr['Planned start date'],
+                actualStart: cr['Actual start date'],
+                plannedEnd: cr['Planned end date'],
+                actualEnd: cr['Actual end date'],
+                notes: cr['Comments and Work notes'] || reviewerNotesStore[cr.Number] || ''
+            }));
+
+            const prompt = `Perform a strict ITIL Quality Audit on these Change Requests:\n${JSON.stringify(crSummaries, null, 2)}\n\nFor each CR, evaluate:
+1. "doc": 1 if all 5 planning sections (Justification, Impl, Risk, Backout, Test) are adequately filled, else 0.
+2. "timing": 1 if Actual Start/End are within 60 mins of Planned Start/End, else 0.
+3. "evidence": 1 if test/post-change evidence is indicated, else 0.
+4. "notes": 1 if detailed work notes exist, else 0.
+5. "feedback": Concise 1-sentence audit summary.
+
+Return a JSON array of objects with keys: "number", "doc", "timing", "evidence", "notes", "feedback".`;
+
+            const payload = {
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                "number": { "type": "STRING" },
+                                "doc": { "type": "INTEGER" },
+                                "timing": { "type": "INTEGER" },
+                                "evidence": { "type": "INTEGER" },
+                                "notes": { "type": "INTEGER" },
+                                "feedback": { "type": "STRING" }
+                            },
+                            "propertyOrdering": ["number", "doc", "timing", "evidence", "notes", "feedback"]
+                        }
+                    }
+                }
+            };
+
+            try {
+                const res = await fetchWithExponentialBackoff(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) throw new Error(`Gemini Error: ${res.statusText}`);
+
+                const data = await res.json();
+                const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (jsonText) {
+                    const auditResults = JSON.parse(jsonText);
+                    auditResults.forEach(item => {
+                        auditScoresStore[item.number] = {
+                            doc: item.doc,
+                            timing: item.timing,
+                            evidence: item.evidence,
+                            notes: item.notes,
+                            feedback: item.feedback
+                        };
+                    });
+                    saveToLocalStorage();
+                    renderAuditView();
+                    showNotification(`AI Auto-Audit completed for ${auditResults.length} CRs!`);
+                }
+            } catch (err) {
+                console.error("AI Auto-Audit failed:", err);
+                showNotification("AI Auto-Audit failed: " + err.message, true);
+            }
+        }
+
+        async function generateAuditTeamsNotice() {
+            const assignee = activeAuditAssigneeTab;
+            const dataset = auditRequests.length > 0 ? auditRequests : changeRequests;
+            const filtered = assignee === 'ALL' ? dataset : dataset.filter(c => (c['Assigned to'] || 'Unassigned') === assignee);
+
+            if (filtered.length === 0) {
+                showNotification("No CRs found for this assignee tab.", true);
+                return;
+            }
+
+            const flaggedItems = filtered.map(cr => {
+                const scores = auditScoresStore[cr.Number] || { doc: 1, timing: 1, evidence: 1, notes: 1 };
+                const total = Math.round(((scores.doc + scores.timing + scores.evidence + scores.notes) / 4) * 100);
+                return {
+                    number: cr.Number,
+                    title: cr['Short description'],
+                    score: total,
+                    defects: [
+                        scores.doc === 0 ? "Documentation Incomplete" : null,
+                        scores.timing === 0 ? "Schedule/Timing Variance" : null,
+                        scores.evidence === 0 ? "Missing Post Evidence" : null,
+                        scores.notes === 0 ? "Incomplete Closure Notes" : null
+                    ].filter(Boolean)
+                };
+            });
+
+            const prompt = `Construct a professional, friendly, and firm Microsoft Teams reminder notice for implementer/assignee "${assignee}".\nAudited CR Items: ${JSON.stringify(flaggedItems, null, 2)}\n\nRemind them of Valvoline ITIL v4 Change Governance standards, highlight flagged items, and encourage process compliance for upcoming deployments.`;
+            const sysPrompt = "You are Kimmy, Senior Co-Change Manager. Keep the message concise, structured, and ready to post into MS Teams.";
+
+            const modalTitle = document.getElementById('notice-modal-title');
+            const modalSubtitle = document.getElementById('notice-modal-subtitle');
+            const modalText = document.getElementById('notice-modal-text');
+
+            if (modalTitle) modalTitle.innerText = `AI MS Teams Audit Notice - ${assignee}`;
+            if (modalSubtitle) modalSubtitle.innerText = `Send to ${assignee} via MS Teams`;
+            if (modalText) modalText.value = "Generating AI Teams Notice with Gemini Flash...";
+
+            toggleNoticeModal();
+
+            const result = await callGeminiAPI(prompt, sysPrompt, false);
+            if (modalText) modalText.value = result.text;
+        }
+
         function showNotification(message, isError = false) {
             const toast = document.getElementById('toast-notification');
-            const toastMsg = document.getElementById('toast-message');
             const toastContainer = document.getElementById('toast-container');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
 
-            if (!toast || !toastMsg) return;
+            if (!toast || !toastMessage) return;
 
-            toastMsg.innerText = message;
+            toastMessage.innerText = message;
             if (isError) {
-                toastContainer.className = "bg-rose-900 text-white border border-rose-400/40 shadow-xl rounded-xl px-4 py-3 flex items-center space-x-3 text-xs";
+                if (toastContainer) toastContainer.className = "bg-rose-900 text-white border border-rose-400/40 shadow-xl rounded-xl px-4 py-3 flex items-center space-x-3 text-xs";
+                if (toastIcon) toastIcon.setAttribute('data-lucide', 'alert-triangle');
             } else {
-                toastContainer.className = "bg-cyan-900 text-white border border-cyan-400/40 shadow-xl rounded-xl px-4 py-3 flex items-center space-x-3 text-xs";
+                if (toastContainer) toastContainer.className = "bg-cyan-900 text-white border border-cyan-400/40 shadow-xl rounded-xl px-4 py-3 flex items-center space-x-3 text-xs";
+                if (toastIcon) toastIcon.setAttribute('data-lucide', 'check-circle-2');
             }
+            lucide.createIcons();
 
             toast.classList.remove('translate-y-[-100px]', 'opacity-0', 'pointer-events-none');
             toast.classList.add('translate-y-0', 'opacity-100');
@@ -863,6 +1250,7 @@
                 localStorage.setItem('cab_crs_data', JSON.stringify(changeRequests));
                 localStorage.setItem('cab_audit_data', JSON.stringify(auditRequests));
                 localStorage.setItem('cab_closable_data', JSON.stringify(closableRequests));
+                localStorage.setItem('cab_approved_urgent_data', JSON.stringify(approvedUrgentRequests));
                 localStorage.setItem('cab_reviewer_notes', JSON.stringify(reviewerNotesStore));
                 localStorage.setItem('cab_audit_scores', JSON.stringify(auditScoresStore));
                 localStorage.setItem('cab_strikes_data', JSON.stringify(strikeStore));
@@ -881,6 +1269,9 @@
 
                 const savedClosables = localStorage.getItem('cab_closable_data');
                 if (savedClosables) closableRequests = JSON.parse(savedClosables);
+
+                const savedApprovedUrgent = localStorage.getItem('cab_approved_urgent_data');
+                if (savedApprovedUrgent) approvedUrgentRequests = JSON.parse(savedApprovedUrgent);
                 
                 const savedNotes = localStorage.getItem('cab_reviewer_notes');
                 if (savedNotes) reviewerNotesStore = JSON.parse(savedNotes);
@@ -932,7 +1323,7 @@
             });
         }
 
-        // Late Submission Calculator (Evaluates 6 AM Cutoff on target CAB day based on Planned Start Date)
+        // Late Submission Calculator
         function checkLateSubmission(cr) {
             const type = (cr.Type || 'Normal').trim();
             if (type.toLowerCase() === 'standard' || type.toLowerCase() === 'emergency') {
@@ -942,7 +1333,6 @@
             const openedDate = parseDate(cr.Opened);
             const startDate = parseDate(cr['Planned start date']);
 
-            // Determine Preceding Target CAB session before or on planned start
             let targetCAB = new Date(startDate.getTime());
             targetCAB.setHours(10, 0, 0, 0);
 
@@ -958,7 +1348,6 @@
                 targetCAB.setDate(targetCAB.getDate() - 1);
             }
 
-            // Cutoff is 6:00 AM EST on that target CAB day
             const cutoffDate = new Date(targetCAB.getTime());
             cutoffDate.setHours(6, 0, 0, 0);
 
@@ -975,7 +1364,7 @@
             return { isLate: false, reason: "Compliant", targetCABStr: targetCABFormatted };
         }
 
-        // Governance & Co-Manager Insight Thought Generator (Purely governance & technical risks)
+        // Co-Manager Insight Thought Generator
         function generateCoManagerThought(cr) {
             const lateCheck = checkLateSubmission(cr);
             if (lateCheck.isLate) {
@@ -1029,22 +1418,240 @@
 
             const mainFilterToolbar = document.getElementById('main-filter-toolbar');
             if (mainFilterToolbar) {
-                if (tabName === 'board') {
-                    mainFilterToolbar.classList.remove('hidden');
-                } else {
-                    mainFilterToolbar.classList.add('hidden');
-                }
+                if (tabName === 'board') mainFilterToolbar.classList.remove('hidden');
+                else mainFilterToolbar.classList.add('hidden');
             }
 
-            if (tabName === 'board') renderBoardView();
-            if (tabName === 'urgent-emergency') initUrgentEmergencyView();
-            if (tabName === 'assignees') renderAssigneesView();
-            if (tabName === 'auditing') renderAuditView();
-            if (tabName === 'closable') renderClosableTab();
+            renderApp();
+        }
+
+        // File Processing Handler (Main Queue)
+        function handleFileUpload(e) {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+
+            const file = files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonRows = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (!jsonRows || jsonRows.length === 0) {
+                        showNotification("Uploaded spreadsheet contains no readable rows.", true);
+                        return;
+                    }
+
+                    changeRequests = jsonRows.map((row, idx) => {
+                        const num = getRowField(row, 'Number') || `CHG${100000 + idx}`;
+                        const shortDesc = getRowField(row, 'Short description') || getRowField(row, 'Title') || 'No Title Provided';
+                        const desc = getRowField(row, 'Description') || shortDesc;
+                        let type = getRowField(row, 'Type') || 'Normal';
+                        const state = getRowField(row, 'State') || 'Pending';
+                        const opened = getRowField(row, 'Opened');
+                        const start = getRowField(row, 'Planned start date');
+                        const end = getRowField(row, 'Planned end date');
+                        const assignee = getRowField(row, 'Assigned to') || 'Unassigned';
+                        const justification = getRowField(row, 'Justification');
+                        const implPlan = getRowField(row, 'Implementation plan');
+                        const risk = getRowField(row, 'Risk and impact analysis');
+                        const backout = getRowField(row, 'Backout plan');
+                        const test = getRowField(row, 'Test plan');
+                        const notes = getRowField(row, 'Comments and Work notes');
+
+                        let isSyntaxExempt = false;
+                        if (type.toLowerCase() === 'standard' && (assignee.toLowerCase().includes('syntax') || shortDesc.toLowerCase().includes('syntax'))) {
+                            type = 'Normal';
+                            isSyntaxExempt = true;
+                        }
+
+                        let appState = 'Pending';
+                        if (state.toLowerCase().includes('review')) appState = 'Marked As Reviewed';
+                        else if (state.toLowerCase().includes('approve')) appState = 'CAB Approved';
+
+                        return {
+                            Number: num,
+                            'Short description': shortDesc,
+                            Description: desc,
+                            Type: type,
+                            State: appState,
+                            ServiceNowState: state,
+                            Opened: opened,
+                            'Planned start date': start,
+                            'Planned end date': end,
+                            'Assigned to': assignee,
+                            Justification: justification,
+                            'Implementation plan': implPlan,
+                            'Risk and impact analysis': risk,
+                            'Backout plan': backout,
+                            'Test plan': test,
+                            'Comments and Work notes': notes,
+                            syntaxExemptionApplied: isSyntaxExempt
+                        };
+                    });
+
+                    saveToLocalStorage();
+                    initUrgentEmergencyView();
+                    renderApp();
+                    showNotification(`Successfully imported ${changeRequests.length} Change Requests!`);
+                } catch (err) {
+                    console.error("XLSX parsing failed:", err);
+                    showNotification("Failed to parse XLSX file: " + err.message, true);
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function handleAuditFileUpload(e) {
+            const file = e.target.files?.[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(sheet);
+
+                    auditRequests = rows.map((r, idx) => ({
+                        Number: getRowField(r, 'Number') || `AUD${1000 + idx}`,
+                        'Short description': getRowField(r, 'Short description'),
+                        Type: getRowField(r, 'Type') || 'Normal',
+                        'Assigned to': getRowField(r, 'Assigned to') || 'Unassigned',
+                        'Assignment group': getRowField(r, 'Assignment group') || 'IT Tower',
+                        'Planned start date': getRowField(r, 'Planned start date'),
+                        'Planned end date': getRowField(r, 'Planned end date'),
+                        'Actual start date': getRowField(r, 'Actual start date'),
+                        'Actual end date': getRowField(r, 'Actual end date'),
+                        Justification: getRowField(r, 'Justification'),
+                        'Implementation plan': getRowField(r, 'Implementation plan'),
+                        'Risk and impact analysis': getRowField(r, 'Risk and impact analysis'),
+                        'Backout plan': getRowField(r, 'Backout plan'),
+                        'Test plan': getRowField(r, 'Test plan'),
+                        'Comments and Work notes': getRowField(r, 'Comments and Work notes')
+                    }));
+
+                    saveToLocalStorage();
+                    renderAuditView();
+                    showNotification(`Loaded ${auditRequests.length} Quality Audit records!`);
+                } catch (err) {
+                    showNotification("Audit XLSX upload failed: " + err.message, true);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function handleClosableFileUpload(e) {
+            const file = e.target.files?.[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(sheet);
+
+                    closableRequests = rows.map((r, idx) => ({
+                        Number: getRowField(r, 'Number') || `CLS${1000 + idx}`,
+                        'Close code': getRowField(r, 'Close code') || 'Successful',
+                        'Short description': getRowField(r, 'Short description'),
+                        Type: getRowField(r, 'Type') || 'Normal',
+                        State: getRowField(r, 'State') || 'Implemented',
+                        'Planned start date': getRowField(r, 'Planned start date'),
+                        'Planned end date': getRowField(r, 'Planned end date'),
+                        'Assigned to': getRowField(r, 'Assigned to') || 'Unassigned'
+                    }));
+
+                    saveToLocalStorage();
+                    renderClosableTab();
+                    showNotification(`Loaded ${closableRequests.length} Closable CR records!`);
+                } catch (err) {
+                    showNotification("Closable XLSX upload failed: " + err.message, true);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function exportCRs() {
+            if (changeRequests.length === 0) {
+                showNotification("No Change Requests available to export.", true);
+                return;
+            }
+
+            const exportData = changeRequests.map(cr => ({
+                "Number": cr.Number,
+                "Short description": cr['Short description'],
+                "Description": cr.Description,
+                "Type": cr.Type,
+                "State": cr.State,
+                "ServiceNow State": cr.ServiceNowState || '',
+                "Opened": formatDateStr(cr.Opened),
+                "Planned start date": formatDateStr(cr['Planned start date']),
+                "Planned end date": formatDateStr(cr['Planned end date']),
+                "Assigned to": cr['Assigned to'],
+                "Justification": cr.Justification,
+                "Implementation plan": cr['Implementation plan'],
+                "Risk and impact analysis": cr['Risk and impact analysis'],
+                "Backout plan": cr['Backout plan'],
+                "Test plan": cr['Test plan'],
+                "Reviewer Notes": reviewerNotesStore[cr.Number] || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "CAB_Review_Export");
+            XLSX.writeFile(wb, `Valvoline_CAB_Review_Export_${new Date().toISOString().slice(0, 10)}.xlsx`);
+            showNotification("Exported Change Requests to XLSX!");
+        }
+
+        function switchUrgentSubTab(subTab) {
+            activeUrgentSubTab = subTab;
+            const assessmentView = document.getElementById('urgent-view-assessment');
+            const approvedView = document.getElementById('urgent-view-approved-log');
+            const trendsView = document.getElementById('urgent-view-monthly-trends');
+            const btnAssessment = document.getElementById('urgent-subnav-assessment');
+            const btnApproved = document.getElementById('urgent-subnav-approved');
+            const btnTrends = document.getElementById('urgent-subnav-trends');
+            const exportBtn = document.getElementById('export-urgent-log-btn');
+
+            if (subTab === 'assessment') {
+                if (assessmentView) assessmentView.classList.remove('hidden');
+                if (approvedView) approvedView.classList.add('hidden');
+                if (trendsView) trendsView.classList.add('hidden');
+                if (exportBtn) exportBtn.classList.add('hidden');
+                if (btnAssessment) btnAssessment.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-cyan-800 text-white shadow";
+                if (btnApproved) btnApproved.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white border border-cyan-200 text-slate-700 hover:bg-cyan-50";
+                if (btnTrends) btnTrends.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white border border-cyan-200 text-slate-700 hover:bg-cyan-50";
+            } else if (subTab === 'approved-log') {
+                if (assessmentView) assessmentView.classList.add('hidden');
+                if (approvedView) approvedView.classList.remove('hidden');
+                if (trendsView) trendsView.classList.add('hidden');
+                if (exportBtn) exportBtn.classList.remove('hidden');
+                if (btnAssessment) btnAssessment.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white border border-cyan-200 text-slate-700 hover:bg-cyan-50";
+                if (btnApproved) btnApproved.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-cyan-800 text-white shadow";
+                if (btnTrends) btnTrends.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white border border-cyan-200 text-slate-700 hover:bg-cyan-50";
+                renderApprovedUrgentLog();
+            } else {
+                if (assessmentView) assessmentView.classList.add('hidden');
+                if (approvedView) approvedView.classList.add('hidden');
+                if (trendsView) trendsView.classList.remove('hidden');
+                if (exportBtn) exportBtn.classList.add('hidden');
+                if (btnAssessment) btnAssessment.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white border border-cyan-200 text-slate-700 hover:bg-cyan-50";
+                if (btnApproved) btnApproved.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white border border-cyan-200 text-slate-700 hover:bg-cyan-50";
+                if (btnTrends) btnTrends.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-rose-800 text-white shadow";
+                renderMonthlyUrgentTrends();
+            }
             lucide.createIcons();
         }
 
-        // URGENT & EMERGENCY CHANGE REVIEW ENGINE
         function setUrgentClass(typeClass) {
             activeUrgentClass = typeClass;
             const urgentBtn = document.getElementById('urgent-toggle-btn');
@@ -1084,7 +1691,6 @@
         }
 
         function initUrgentEmergencyView() {
-            // Populate CR Dropdown from current queue
             const select = document.getElementById('urgent-cr-select');
             if (select) {
                 select.innerHTML = `<option value="">-- Choose active Change Request --</option>`;
@@ -1093,7 +1699,6 @@
                 });
             }
 
-            // Bind Screenshot Paste Listener on Paste Zone
             const pasteZone = document.getElementById('screenshot-paste-zone');
             if (pasteZone) {
                 pasteZone.addEventListener('paste', handleScreenshotPaste);
@@ -1106,8 +1711,10 @@
                 });
                 pasteZone.addEventListener('drop', (e) => {
                     e.preventDefault();
-                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                        processImageFile(e.dataTransfer.files[0]);
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        Array.from(e.dataTransfer.files).forEach(file => {
+                            if (file.type.startsWith('image/')) processImageFile(file);
+                        });
                     }
                 });
             }
@@ -1115,50 +1722,97 @@
 
         function handleScreenshotPaste(e) {
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            let foundImage = false;
             for (let index in items) {
                 const item = items[index];
                 if (item.kind === 'file' && item.type.startsWith('image/')) {
                     const blob = item.getAsFile();
                     processImageFile(blob);
-                    break;
+                    foundImage = true;
                 }
             }
+            if (foundImage) e.preventDefault();
         }
 
         function handleScreenshotUpload(e) {
-            const file = e.target.files[0];
-            if (file) processImageFile(file);
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                Array.from(files).forEach(file => processImageFile(file));
+            }
         }
 
         function processImageFile(file) {
             const reader = new FileReader();
             reader.onload = function(evt) {
-                currentPastedImageBase64 = evt.target.result;
-                const previewImg = document.getElementById('screenshot-preview');
-                const pastePrompt = document.getElementById('paste-prompt');
-                const clearBtn = document.getElementById('clear-img-btn');
+                const base64Data = evt.target.result;
+                const mimeType = file.type || base64Data.split(';')[0].split(':')[1] || "image/png";
+                const imgId = 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
 
-                if (previewImg) {
-                    previewImg.src = currentPastedImageBase64;
-                    previewImg.classList.remove('hidden');
-                }
-                if (pastePrompt) pastePrompt.classList.add('hidden');
-                if (clearBtn) clearBtn.classList.remove('hidden');
+                currentPastedImages.push({
+                    id: imgId,
+                    base64: base64Data,
+                    mimeType: mimeType,
+                    fileName: file.name || `Screenshot_${currentPastedImages.length + 1}.png`
+                });
 
-                showNotification("Ticket Screenshot loaded successfully!");
+                renderScreenshotGallery();
+                showNotification(`Added ${file.name || 'screenshot'}! Total: ${currentPastedImages.length} image(s).`);
             };
             reader.readAsDataURL(file);
         }
 
-        function clearScreenshot() {
-            currentPastedImageBase64 = null;
-            const previewImg = document.getElementById('screenshot-preview');
+        function removeScreenshot(imgId, e) {
+            if (e) e.stopPropagation();
+            currentPastedImages = currentPastedImages.filter(img => img.id !== imgId);
+            renderScreenshotGallery();
+        }
+
+        function renderScreenshotGallery() {
+            const gallery = document.getElementById('screenshot-gallery');
             const pastePrompt = document.getElementById('paste-prompt');
             const clearBtn = document.getElementById('clear-img-btn');
+            const countBadge = document.getElementById('screenshot-count-badge');
 
-            if (previewImg) previewImg.classList.add('hidden');
-            if (pastePrompt) pastePrompt.classList.remove('hidden');
-            if (clearBtn) clearBtn.classList.add('hidden');
+            if (!gallery) return;
+
+            if (currentPastedImages.length === 0) {
+                gallery.classList.add('hidden');
+                gallery.innerHTML = '';
+                if (pastePrompt) pastePrompt.classList.remove('hidden');
+                if (clearBtn) clearBtn.classList.add('hidden');
+                if (countBadge) countBadge.innerText = '0 Image(s) Attached';
+                return;
+            }
+
+            if (pastePrompt) pastePrompt.classList.add('hidden');
+            if (clearBtn) clearBtn.remove('hidden');
+            if (countBadge) countBadge.innerText = `${currentPastedImages.length} Image(s) Attached`;
+
+            gallery.innerHTML = '';
+            gallery.classList.remove('hidden');
+
+            currentPastedImages.forEach((img, idx) => {
+                const card = document.createElement('div');
+                card.className = "relative group rounded-lg border border-cyan-300 overflow-hidden bg-white shadow-sm";
+                card.innerHTML = `
+                    <img src="${img.base64}" class="h-24 w-full object-cover" alt="${img.fileName}">
+                    <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1 p-1">
+                        <button onclick="removeScreenshot('${img.id}', event)" title="Remove Screenshot" class="bg-rose-600 hover:bg-rose-700 text-white p-1 rounded-full text-xs shadow">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <span class="absolute bottom-1 left-1 bg-cyan-950/80 text-cyan-200 text-[9px] px-1.5 py-0.5 rounded font-mono">#${idx + 1}</span>
+                `;
+                gallery.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        function clearScreenshot() {
+            currentPastedImages = [];
+            renderScreenshotGallery();
+            showNotification("Cleared all screenshots.");
         }
 
         function loadCRIntoUrgentForm(crNumber) {
@@ -1175,37 +1829,44 @@
             const q3Input = document.getElementById('rti-q3');
             const q5Input = document.getElementById('rti-q5');
             const q6Input = document.getElementById('rti-q6');
+            const implInput = document.getElementById('rti-impl-plan');
+            const riskInput = document.getElementById('rti-risk-analysis');
+            const backoutInput = document.getElementById('rti-backout-plan');
 
             if (crNumInput) crNumInput.value = `${cr.Number} | ${cr['Short description']}`;
             if (q1Input) q1Input.value = cr.Justification || '';
             if (q2Input) q2Input.value = cr.Description || '';
-            if (q3Input) q3Input.value = `Opened: ${formatDateStr(cr.Opened)}. Requires accelerated execution prior to standard CAB review.`;
+            if (q3Input) q3Input.value = `Opened: ${formatDateStr(cr.Opened)}. Accelerated execution requested.`;
             if (q5Input) q5Input.value = "Stores, Corporate Operations, IT Domain Towers";
             if (q6Input) q6Input.value = cr['Test plan'] || "Tested in QA/Lower Environment.";
+            if (implInput) implInput.value = cr['Implementation plan'] || '';
+            if (riskInput) riskInput.value = cr['Risk and impact analysis'] || '';
+            if (backoutInput) backoutInput.value = cr['Backout plan'] || '';
         }
 
         async function scanScreenshotWithAI() {
-            if (!currentPastedImageBase64) {
-                showNotification("Please paste or upload a ticket screenshot first!", true);
+            if (currentPastedImages.length === 0) {
+                showNotification("Please paste or upload at least one ticket screenshot first!", true);
                 return;
             }
 
             const scanBtn = document.getElementById('ai-scan-btn');
             if (scanBtn) {
-                scanBtn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4 animate-spin text-cyan-200"></i> Scanning Screenshot with Gemini Vision...`;
+                scanBtn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4 animate-spin text-cyan-200"></i> Scanning ${currentPastedImages.length} Image(s)...`;
                 scanBtn.disabled = true;
             }
             lucide.createIcons();
 
-            const base64Data = currentPastedImageBase64.split(',')[1];
-            const mimeType = currentPastedImageBase64.split(';')[0].split(':')[1] || "image/png";
-
-            const prompt = `Analyze this ITIL Change Request / Incident screenshot:
+            const prompt = `Analyze all ${currentPastedImages.length} attached ITIL Change Request / Incident screenshots and extract all 5 mandatory Planning elements:
 1. Extract Change Request Number (or Incident Number) and Title.
-2. Determine if this is an Urgent Change or Emergency Change.
-3. Extract the Justification / RTI text and test evidence proof.
-4. Detect if there are any signs of an Administrative Issue (e.g., forgot to submit on time, late request, missed deadline).
-5. Output structured JSON:
+2. Trigger Source: "Incident" | "Security" | "BusinessDeadline" | "Administrative".
+3. Justification & RTI Details (Urgency reason, Delay Impact, Admin Delay check).
+4. Step-by-Step Implementation Plan (Check if formatted as numbered sequential steps).
+5. Risk and Impact Analysis (Detailed narrative of risk & system impact).
+6. Step-by-Step Backout Plan (Rollback procedure).
+7. Test & Validation Plan (Lower environment QA/UAT evidence).
+
+Output structured JSON:
 {
   "crNumber": "...",
   "title": "...",
@@ -1213,28 +1874,35 @@
   "rtiQ1": "...",
   "rtiQ2": "...",
   "rtiQ3": "...",
+  "implementationPlan": "...",
+  "riskAnalysis": "...",
+  "backoutPlan": "...",
+  "testPlan": "...",
+  "isImplementationStepByStep": boolean,
+  "isBackoutStepByStep": boolean,
   "isAdminIssue": boolean,
   "adminReason": "..."
 }`;
 
+            const partsPayload = [{ text: prompt }];
+            currentPastedImages.forEach(img => {
+                const rawData = img.base64.includes(',') ? img.base64.split(',')[1] : img.base64;
+                partsPayload.push({
+                    inlineData: {
+                        mimeType: img.mimeType,
+                        data: rawData
+                    }
+                });
+            });
+
             const apiKey = window.userGeminiApiKey || "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-
-            const payload = {
-                contents: [{
-                    role: "user",
-                    parts: [
-                        { text: prompt },
-                        { inlineData: { mimeType: mimeType, data: base64Data } }
-                    ]
-                }]
-            };
 
             try {
                 const res = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ contents: [{ role: "user", parts: partsPayload }] })
                 });
 
                 if (!res.ok) throw new Error(`Gemini Vision Error: ${res.statusText}`);
@@ -1242,7 +1910,6 @@
                 const data = await res.json();
                 const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-                // Attempt JSON parse
                 const jsonMatch = text.match(/\{[\s\S]*\}/);
                 if (jsonMatch) {
                     const parsed = JSON.parse(jsonMatch[0]);
@@ -1252,17 +1919,27 @@
                     const q1Input = document.getElementById('rti-q1');
                     const q2Input = document.getElementById('rti-q2');
                     const q3Input = document.getElementById('rti-q3');
+                    const implInput = document.getElementById('rti-impl-plan');
+                    const riskInput = document.getElementById('rti-risk-analysis');
+                    const backoutInput = document.getElementById('rti-backout-plan');
+                    const testInput = document.getElementById('rti-q6');
 
-                    if (crNumInput) crNumInput.value = `${parsed.crNumber || 'CHG'} | ${parsed.title || 'Scanned Screenshot'}`;
+                    if (crNumInput) crNumInput.value = `${parsed.crNumber || 'CHG'} | ${parsed.title || 'Scanned Screenshots'}`;
                     if (triggerInput && parsed.triggerType) triggerInput.value = parsed.triggerType;
                     if (q1Input) q1Input.value = parsed.rtiQ1 || "Extracted from ticket screenshot";
                     if (q2Input) q2Input.value = parsed.rtiQ2 || "Extracted delay impact details";
                     if (q3Input) q3Input.value = parsed.adminReason || parsed.rtiQ3 || "Accelerated lead time request";
+                    if (implInput && parsed.implementationPlan) implInput.value = parsed.implementationPlan;
+                    if (riskInput && parsed.riskAnalysis) riskInput.value = parsed.riskAnalysis;
+                    if (backoutInput && parsed.backoutPlan) backoutInput.value = parsed.backoutPlan;
+                    if (testInput && parsed.testPlan) testInput.value = parsed.testPlan;
 
                     if (parsed.isAdminIssue) {
-                        showNotification("⚠️ AI Alert: Administrative Issue Detected in Screenshot!", true);
+                        showNotification("⚠️ AI Alert: Administrative Issue Detected in Screenshots!", true);
+                    } else if (!parsed.isImplementationStepByStep || !parsed.isBackoutStepByStep) {
+                        showNotification("⚠️ Warning: Implementation or Backout plan lacks step-by-step structure!", true);
                     } else {
-                        showNotification("AI Screenshot Analysis Completed!");
+                        showNotification(`Scanned ${currentPastedImages.length} images! All 5 planning sections populated.`);
                     }
                 } else {
                     showNotification("Scanned image text successfully!");
@@ -1272,7 +1949,7 @@
                 showNotification("AI Vision scan error: " + err.message, true);
             } finally {
                 if (scanBtn) {
-                    scanBtn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4 text-cyan-200"></i> AI Scan Ticket Screenshot (Gemini)`;
+                    scanBtn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4 text-cyan-200"></i> AI Scan Screenshots (Gemini)`;
                     scanBtn.disabled = false;
                 }
                 lucide.createIcons();
@@ -1287,7 +1964,10 @@
             const q1 = document.getElementById('rti-q1')?.value || '';
             const q2 = document.getElementById('rti-q2')?.value || '';
             const q3 = document.getElementById('rti-q3')?.value || '';
-            const q4 = document.getElementById('rti-q4')?.value || 'No';
+            const implText = document.getElementById('rti-impl-plan')?.value || '';
+            const riskText = document.getElementById('rti-risk-analysis')?.value || '';
+            const backoutText = document.getElementById('rti-backout-plan')?.value || '';
+            const testText = document.getElementById('rti-q6')?.value || '';
 
             const evalResultBox = document.getElementById('rti-eval-result');
             const statusBadge = document.getElementById('rti-status-badge');
@@ -1303,6 +1983,17 @@
 
             const isEmergencyWithoutMI = activeUrgentClass === 'Emergency' && trigger !== 'Incident' && trigger !== 'Security';
 
+            const isImplStepByStep = implText.trim().length >= 25 && (/\b(1\.|2\.|step|1\)|2\))/i.test(implText) || implText.split('\n').filter(l => l.trim()).length >= 2);
+            const isBackoutStepByStep = backoutText.trim().length >= 20 && (/\b(1\.|2\.|step|1\)|2\))/i.test(backoutText) || backoutText.split('\n').filter(l => l.trim()).length >= 2);
+            const isRiskDetailed = riskText.trim().length >= 20;
+            const isTestComplete = testText.trim().length >= 15;
+
+            let deficiencies = [];
+            if (!isImplStepByStep) deficiencies.push("Implementation Plan is not a step-by-step guide.");
+            if (!isRiskDetailed) deficiencies.push("Risk & Impact Analysis lacks detailed narrative.");
+            if (!isBackoutStepByStep) deficiencies.push("Backout / Rollback Plan is not a step-by-step procedure.");
+            if (!isTestComplete) deficiencies.push("Test / Validation Plan lacks lower environment (QA/UAT) proof.");
+
             if (isAdministrativeIssue) {
                 if (statusBadge) statusBadge.className = "bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded";
                 if (statusBadge) statusBadge.innerText = "PROHIBITED / REJECTED";
@@ -1316,12 +2007,50 @@
                     <p class="leading-relaxed text-slate-700">
                         <strong>Policy Violation:</strong> Utilizing Urgent or Emergency Change process because of administrative delays, poor planning, or missed CAB cutoffs is <u>strictly forbidden</u> under Valvoline ITSM SOP 0004.
                     </p>
-                    <div class="bg-white p-3 rounded-xl border border-rose-200 space-y-1 font-mono text-[11px] text-slate-800">
-                        <strong>Rejection Guidance:</strong> This request (${crTitle}) must be resubmitted as a standard <strong>Normal Change Request</strong> with regular lead time review in the next scheduled CAB session.
+                    <div class="bg-white p-3 rounded-xl border border-rose-200 font-mono text-[11px] text-slate-800 space-y-2">
+                        <strong>Standard Action:</strong> Re-submit as a Normal Change Request with regular lead-time review in the upcoming CAB session.
+                        <div class="border-t border-rose-100 pt-2 font-sans">
+                            <label class="block font-bold text-amber-900 text-[10px] uppercase mb-1">Grant Exemption / Waiver Reason:</label>
+                            <input type="text" id="rti-exemption-reason" placeholder="Enter Change Manager waiver reason (e.g. Executive verbal signoff)..." class="w-full p-2 text-xs border border-amber-300 rounded-lg bg-amber-50">
+                        </div>
                     </div>
-                    <div class="flex justify-end gap-2 pt-2">
+                    <div class="flex flex-wrap items-center justify-end gap-2 pt-2">
+                        <button onclick="approveAndSaveUrgentChange(true)" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-xs shadow-md transition flex items-center gap-1.5">
+                            <i data-lucide="shield-alert" class="w-4 h-4"></i> Grant Exemption & Approve Change
+                        </button>
                         <button onclick="generateUrgentNotice('REJECT')" class="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-lg font-bold text-xs shadow transition flex items-center gap-1.5">
                             <i data-lucide="send" class="w-4 h-4"></i> Copy Administrative Rejection Notice
+                        </button>
+                    </div>
+                `;
+            } else if (deficiencies.length > 0) {
+                if (statusBadge) statusBadge.className = "bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded";
+                if (statusBadge) statusBadge.innerText = "ACTION REQUIRED - PLANNING INCOMPLETE";
+
+                const defHTML = deficiencies.map(d => `<li class="flex items-center gap-1.5 text-amber-900"><i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-600 flex-none"></i> ${d}</li>`).join('');
+
+                evalResultBox.className = "bg-amber-50 rounded-2xl border-2 border-amber-300 p-5 space-y-3 text-xs text-amber-950 shadow-md";
+                evalResultBox.innerHTML = `
+                    <div class="flex items-center gap-2 font-bold text-amber-900 text-sm">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600"></i>
+                        PLANNING DEFICIENCIES IDENTIFIED (${deficiencies.length} Item(s) Need Modification)
+                    </div>
+                    <p class="leading-relaxed text-slate-700">
+                        The ticket lacks full documentation in the 5 mandatory planning components. You can request submitter modifications or grant a Change Manager planning exemption below:
+                    </p>
+                    <ul class="bg-white p-3 rounded-xl border border-amber-200 space-y-1 font-medium">
+                        ${defHTML}
+                    </ul>
+                    <div class="bg-white p-3 rounded-xl border border-amber-200 space-y-1">
+                        <label class="block font-bold text-amber-900 text-[10px] uppercase mb-1">Planning Exemption / Waiver Justification:</label>
+                        <input type="text" id="rti-exemption-reason" placeholder="Enter reason for overriding planning deficiency (e.g. Vendor emergency patch, pre-validated in lab)..." class="w-full p-2 text-xs border border-amber-300 rounded-lg bg-amber-50">
+                    </div>
+                    <div class="flex flex-wrap items-center justify-end gap-2 pt-2">
+                        <button onclick="approveAndSaveUrgentChange(true)" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-xs shadow-md transition flex items-center gap-1.5">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i> Grant Exemption & Approve Change
+                        </button>
+                        <button onclick="generateUrgentNotice('MODIFICATION_NEEDED')" class="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-lg font-bold text-xs shadow transition flex items-center gap-1.5">
+                            <i data-lucide="send" class="w-4 h-4"></i> Copy Submitter Modification Request Notice
                         </button>
                     </div>
                 `;
@@ -1336,24 +2065,36 @@
                         REQUIRES P1/P2 MAJOR INCIDENT OR SECURITY CVE LINK
                     </div>
                     <p class="leading-relaxed text-slate-700">
-                        Emergency Changes are restricted solely to active Major Incidents (P1/P2) or critical Security threats. Please verify that a Major Incident bridge ticket is attached prior to post-CAB review.
+                        Emergency Changes are restricted solely to active Major Incidents (P1/P2) or critical Security threats.
                     </p>
+                    <div class="bg-white p-3 rounded-xl border border-amber-200 space-y-1">
+                        <label class="block font-bold text-amber-900 text-[10px] uppercase mb-1">MI Link Waiver / Exemption Reason:</label>
+                        <input type="text" id="rti-exemption-reason" placeholder="Enter reason for approving Emergency change without linked MI bridge..." class="w-full p-2 text-xs border border-amber-300 rounded-lg bg-amber-50">
+                    </div>
+                    <div class="flex flex-wrap items-center justify-end gap-2 pt-2">
+                        <button onclick="approveAndSaveUrgentChange(true)" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-xs shadow-md transition flex items-center gap-1.5">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i> Grant Exemption & Approve Change
+                        </button>
+                    </div>
                 `;
             } else {
                 if (statusBadge) statusBadge.className = "bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded";
-                if (statusBadge) statusBadge.innerText = "ITIL COMPLIANT";
+                if (statusBadge) statusBadge.innerText = "ITIL FULLY COMPLIANT";
 
                 evalResultBox.className = "bg-emerald-50 rounded-2xl border-2 border-emerald-300 p-5 space-y-3 text-xs text-emerald-950 shadow-md";
                 evalResultBox.innerHTML = `
                     <div class="flex items-center gap-2 font-bold text-emerald-900 text-sm">
                         <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
-                        VALIDATED: ${activeUrgentClass.toUpperCase()} CHANGE ITIL RTI COMPLIANT
+                        VALIDATED: ALL 5 PLANNING COMPONENTS & ITIL RTI FULLY COMPLIANT
                     </div>
                     <p class="leading-relaxed text-slate-700">
-                        Reason To Implement (RTI) documentation and lower-environment testing evidence satisfy standard ITIL v4 accelerated change criteria.
+                        Reason To Implement (RTI), step-by-step implementation guide, detailed risk analysis, step-by-step backout procedure, and lower environment testing evidence satisfy all standard ITIL v4 governance criteria.
                     </p>
-                    <div class="flex justify-end gap-2 pt-2">
-                        <button onclick="generateUrgentNotice('APPROVE')" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold text-xs shadow transition flex items-center gap-1.5">
+                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-emerald-200">
+                        <button onclick="approveAndSaveUrgentChange(false)" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold text-xs shadow-md transition flex items-center gap-1.5">
+                            <i data-lucide="check-circle-2" class="w-4 h-4"></i> Approve & Save to Web App Log
+                        </button>
+                        <button onclick="generateUrgentNotice('APPROVE')" class="px-4 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg font-bold text-xs shadow transition flex items-center gap-1.5">
                             <i data-lucide="send" class="w-4 h-4"></i> Copy e-CAB Authorization Notice
                         </button>
                     </div>
@@ -1361,6 +2102,163 @@
             }
 
             lucide.createIcons();
+        }
+
+        function promptGrantExemptionAndApprove() {
+            const reason = prompt("Enter Governance Exemption Reason / Waiver Justification (e.g., Executive verbal signoff, critical operational necessity, risk accepted):", "Executive / Change Manager Governance Waiver Granted");
+            if (reason !== null) {
+                approveAndSaveUrgentChange(true, reason);
+            }
+        }
+
+        function approveAndSaveUrgentChange(isExempt = false, explicitReason = '') {
+            const crRaw = document.getElementById('rti-cr-number')?.value || '';
+            const crParts = crRaw.split('|');
+            const number = crParts[0]?.trim() || `CHG${Math.floor(100000 + Math.random() * 900000)}`;
+            const title = crParts[1]?.trim() || 'Urgent/Emergency Change';
+            const trigger = document.getElementById('rti-trigger')?.value || 'Incident';
+            const q1 = document.getElementById('rti-q1')?.value || '';
+            const q2 = document.getElementById('rti-q2')?.value || '';
+            const q3 = document.getElementById('rti-q3')?.value || '';
+            const q4 = document.getElementById('rti-q4')?.value || '';
+            const q5 = document.getElementById('rti-q5')?.value || '';
+            const q7 = document.getElementById('rti-q7')?.value || '';
+            const implText = document.getElementById('rti-impl-plan')?.value || '';
+            const riskText = document.getElementById('rti-risk-analysis')?.value || '';
+            const backoutText = document.getElementById('rti-backout-plan')?.value || '';
+            const testText = document.getElementById('rti-q6')?.value || '';
+
+            const exemptionReason = explicitReason || document.getElementById('rti-exemption-reason')?.value || (isExempt ? 'Change Manager Planning Exemption Granted' : '');
+
+            const record = {
+                id: 'urg_' + Date.now(),
+                number: number,
+                title: title,
+                type: activeUrgentClass,
+                trigger: trigger,
+                approvalDate: new Date().toISOString(),
+                isExempt: isExempt,
+                exemptionReason: exemptionReason,
+                approvalStatus: isExempt ? 'Approved with Exemption' : 'e-CAB Approved',
+                q1_urgencyReason: q1,
+                q2_delayImpact: q2,
+                q3_adminCheck: q3,
+                q4_canBeNormal: q4,
+                q5_stakeholderComms: q5,
+                q7_dependencies: q7,
+                implementationPlan: implText,
+                riskAnalysis: riskText,
+                backoutPlan: backoutText,
+                testPlan: testText,
+                screenshotCount: currentPastedImages.length
+            };
+
+            approvedUrgentRequests = approvedUrgentRequests.filter(u => u.number !== number);
+            approvedUrgentRequests.unshift(record);
+
+            saveToLocalStorage();
+            renderApp();
+            showNotification(`Approved & saved ${number} (${isExempt ? 'Exemption Granted' : 'Fully Compliant'}) to local Urgent/Emergency log!`);
+            switchUrgentSubTab('approved-log');
+        }
+
+        function renderApprovedUrgentLog() {
+            const container = document.getElementById('approved-urgent-list-container');
+            const badge = document.getElementById('badge-approved-urgent-log');
+
+            if (badge) badge.innerText = approvedUrgentRequests.length;
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (approvedUrgentRequests.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center text-xs text-slate-500 bg-cyan-50/50 border border-cyan-200 rounded-xl space-y-2">
+                        <i data-lucide="check-circle-2" class="w-8 h-8 text-cyan-600 mx-auto"></i>
+                        <p class="font-bold text-slate-700">No Approved Urgent or Emergency Changes Logged Yet</p>
+                        <p class="text-[11px] text-slate-500">Validate and click "Approve & Save to Web App Log" on compliant Urgent/Emergency requests to store them here.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            approvedUrgentRequests.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white border border-cyan-200 rounded-xl p-4 shadow-sm hover:shadow-md transition space-y-3 text-xs";
+                card.innerHTML = `
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-100 pb-2">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-mono font-bold text-sm text-cyan-950">${item.number}</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${item.type === 'Emergency' ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">${item.type}</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium ${item.isExempt ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-800 border border-emerald-300'}">${item.approvalStatus || (item.isExempt ? 'Approved with Exemption' : 'e-CAB Approved')}</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] text-slate-600 bg-slate-100">Trigger: ${item.trigger}</span>
+                        </div>
+                        <span class="text-[11px] text-slate-500"><i data-lucide="calendar" class="w-3 h-3 inline text-cyan-600"></i> Approved: ${formatDateStr(item.approvalDate)}</span>
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold text-slate-900">${item.title}</h4>
+                        ${item.isExempt || item.exemptionReason ? `<div class="mt-1 p-2 bg-amber-50 border border-amber-200 rounded text-[11px] text-amber-950"><strong>Governance Exemption Reason:</strong> ${item.exemptionReason || 'Change Manager Waiver Granted'}</div>` : ''}
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <div><strong>Urgency Reason:</strong> ${item.q1_urgencyReason || 'N/A'}</div>
+                        <div><strong>Delay Impact:</strong> ${item.q2_delayImpact || 'N/A'}</div>
+                        <div><strong>Stakeholder Comms:</strong> ${item.q5_stakeholderComms || 'N/A'}</div>
+                        <div><strong>Lower Env Test Evidence:</strong> ${item.testPlan || 'N/A'}</div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 text-[11px] text-slate-500">
+                        <span><i data-lucide="image" class="w-3.5 h-3.5 inline text-cyan-600"></i> Attached Screenshots: ${item.screenshotCount || 0}</span>
+                        <button onclick="deleteApprovedUrgent('${item.id}')" class="text-rose-600 hover:text-rose-800 font-medium flex items-center gap-1">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remove Record
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        function deleteApprovedUrgent(id) {
+            approvedUrgentRequests = approvedUrgentRequests.filter(u => u.id !== id);
+            saveToLocalStorage();
+            renderApp();
+            renderApprovedUrgentLog();
+            showNotification("Removed Urgent/Emergency record.");
+        }
+
+        function exportApprovedUrgentCRs() {
+            if (approvedUrgentRequests.length === 0) {
+                showNotification("No approved Urgent/Emergency records to export.", true);
+                return;
+            }
+
+            const exportData = approvedUrgentRequests.map(item => ({
+                "CR Number": item.number,
+                "Title": item.title,
+                "Classification": item.type,
+                "Trigger Source": item.trigger,
+                "Approved Timestamp": formatDateStr(item.approvalDate),
+                "Urgency Justification": item.q1_urgencyReason,
+                "Delay Impact": item.q2_delayImpact,
+                "Lead Time Exception Reason": item.q3_adminCheck,
+                "Stakeholder Comms": item.q5_stakeholderComms,
+                "Dependencies & Validation": item.q7_dependencies,
+                "Step-by-Step Implementation Plan": item.implementationPlan,
+                "Risk and Impact Analysis": item.riskAnalysis,
+                "Step-by-Step Backout Plan": item.backoutPlan,
+                "Lower Env Test Evidence": item.testPlan,
+                "Attached Screenshot Count": item.screenshotCount
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Approved_Urgent_Emergency_Log");
+            XLSX.writeFile(wb, `Valvoline_Approved_Urgent_Emergency_Log_${new Date().toISOString().slice(0, 7)}.xlsx`);
+            showNotification("Exported Approved Urgent/Emergency Log to XLSX!");
         }
 
         function generateUrgentNotice(actionType) {
@@ -1373,10 +2271,51 @@
                 if (modalTitle) modalTitle.innerText = `Urgent Change Administrative Rejection Notice`;
                 if (modalSubtitle) modalSubtitle.innerText = `Send to Requestor / Implementer`;
                 if (modalText) modalText.value = `ATTENTION: Requestor / Implementer,\n\nYour request for ${activeUrgentClass} Change classification for ticket [${crTitle}] has been REJECTED by Change Management.\n\nReason for Rejection:\nUnder Valvoline ITSM SOP 0004 policy, utilizing Urgent Change due to administrative delay, oversight, or missed CAB cutoff is strictly prohibited.\n\nRequired Action:\nPlease resubmit this request as a Normal Change Request for standard CAB review in our upcoming session.\n\nValvoline Change Governance Board`;
+            } else if (actionType === 'MODIFICATION_NEEDED') {
+                const trigger = document.getElementById('rti-trigger')?.value || 'Incident';
+                const q3 = document.getElementById('rti-q3')?.value || '';
+                const implText = document.getElementById('rti-impl-plan')?.value || '';
+                const riskText = document.getElementById('rti-risk-analysis')?.value || '';
+                const backoutText = document.getElementById('rti-backout-plan')?.value || '';
+                const testText = document.getElementById('rti-q6')?.value || '';
+
+                let defectsList = [];
+
+                if (trigger === 'Administrative' || q3.toLowerCase().includes('forgot') || q3.toLowerCase().includes('missed cutoff')) {
+                    defectsList.push("• Trigger Classification Defect: Utilizing Urgent Change for administrative delay or missed cutoff is prohibited. Provide valid business/technical urgency driver.");
+                }
+
+                if (activeUrgentClass === 'Emergency' && trigger !== 'Incident' && trigger !== 'Security') {
+                    defectsList.push("• Emergency Policy Defect: Emergency Changes must be linked to an active P1/P2 Major Incident or immediate Security Threat.");
+                }
+
+                if (!implText.trim() || implText.trim().length < 25 || !(/\b(1\.|2\.|step|1\)|2\))/i.test(implText) || implText.split('\n').filter(l => l.trim()).length >= 2)) {
+                    defectsList.push("• Implementation Plan Defect: Must be updated with a clear, step-by-step guide (1, 2, 3...) detailing sequential execution commands/actions.");
+                }
+
+                if (!riskText.trim() || riskText.trim().length < 20) {
+                    defectsList.push("• Risk & Impact Analysis Defect: Missing detailed narrative explaining blast radius, potential store/system downtime, and risk mitigation controls.");
+                }
+
+                if (!backoutText.trim() || backoutText.trim().length < 20 || !(/\b(1\.|2\.|step|1\)|2\))/i.test(backoutText) || backoutText.split('\n').filter(l => l.trim()).length >= 2)) {
+                    defectsList.push("• Backout / Rollback Plan Defect: Must provide a sequential, step-by-step rollback procedure to restore the system to a previous stable state.");
+                }
+
+                if (!testText.trim() || testText.trim().length < 15) {
+                    defectsList.push("• Testing & Validation Defect: Missing lower-environment (QA/UAT) test proof or post-deployment verification procedure.");
+                }
+
+                if (defectsList.length === 0) {
+                    defectsList.push("• Documentation Defect: General planning documentation requires further detail prior to authorization.");
+                }
+
+                if (modalTitle) modalTitle.innerText = `Urgent Change Documentation Modification Request`;
+                if (modalSubtitle) modalSubtitle.innerText = `Send to Submitter / Assignee`;
+                if (modalText) modalText.value = `ATTENTION: Submitter / Assignee,\n\nYour ${activeUrgentClass} Change Request [${crTitle}] was evaluated by Change Governance and requires immediate modification before e-CAB authorization can be granted.\n\nSPECIFIC PLANNING DEFECTS / MISSING ITEMS IDENTIFIED:\n${defectsList.join('\n')}\n\nREQUIRED ACTION:\nPlease update the planning sections in ServiceNow immediately to address the defects listed above. Once updated, reply to Change Management for final e-CAB authorization.\n\nValvoline Change Management Board`;
             } else {
                 if (modalTitle) modalTitle.innerText = `e-CAB ${activeUrgentClass} Authorization Notice`;
                 if (modalSubtitle) modalSubtitle.innerText = `Send to e-CAB / Bridge Stakeholders`;
-                if (modalText) modalText.value = `e-CAB AUTHORIZATION NOTICE:\n\nChange Request [${crTitle}] has been validated and APPROVED under ${activeUrgentClass} Change governance.\n\nSummary:\n- Classification: ${activeUrgentClass} Change\n- RTI Compliance: Validated (Non-administrative)\n- Testing Verification: Lower environment QA/UAT confirmed\n\nThe implementer is authorized to proceed with deployment during the approved window.\n\nValvoline Change Management`;
+                if (modalText) modalText.value = `e-CAB AUTHORIZATION NOTICE:\n\nChange Request [${crTitle}] has been validated and APPROVED under ${activeUrgentClass} Change governance.\n\n5-Part Planning Verification:\n- Justification & RTI: Validated (Non-administrative)\n- Implementation Plan: Verified step-by-step guide\n- Risk & Impact Analysis: Verified narrative\n- Backout Plan: Verified step-by-step rollback\n- Testing Evidence: Verified lower environment QA/UAT proof\n\nThe implementer is authorized to proceed with deployment during the approved window.\n\nValvoline Change Management`;
             }
 
             toggleNoticeModal();
@@ -1432,7 +2371,7 @@
 
         function setStatusFilter(status) {
             currentFilterStatus = status;
-            ['ALL', 'Pending', 'Marked As Reviewed', 'CAB Approved', 'LATE'].forEach(s => {
+            ['ALL', 'Pending', 'Marked As Reviewed', 'CAB Approved', 'LATE', 'BIWEEKLY_TRENDS'].forEach(s => {
                 const btn = document.getElementById(`filter-btn-${s}`);
                 if (btn) {
                     if (s === status) {
@@ -1464,8 +2403,20 @@
         function renderBoardView() {
             const container = document.getElementById('cr-cards-container');
             const emptyNotice = document.getElementById('empty-state-notice');
+            const biweeklyContainer = document.getElementById('biweekly-trends-container');
             const searchInput = document.getElementById('cr-search-input');
             const query = (searchInput?.value || '').toLowerCase().trim();
+
+            if (currentFilterStatus === 'BIWEEKLY_TRENDS') {
+                if (container) container.classList.add('hidden');
+                if (emptyNotice) emptyNotice.classList.add('hidden');
+                if (biweeklyContainer) biweeklyContainer.classList.remove('hidden');
+                renderBiweeklyTrends();
+                return;
+            } else {
+                if (biweeklyContainer) biweeklyContainer.classList.add('hidden');
+                if (container) container.classList.remove('hidden');
+            }
 
             if (!container) return;
             container.innerHTML = '';
@@ -1687,7 +2638,6 @@
             lucide.createIcons();
         }
 
-        // Quality Audit Evaluation Helpers
         function evaluateDocumentationCompleteness(cr) {
             const hasJust = (cr.Justification || '').trim().length > 5;
             const hasImpl = (cr['Implementation plan'] || '').trim().length > 5;
@@ -1699,7 +2649,6 @@
             return { isComplete, score: isComplete ? 1 : 0 };
         }
 
-        // Duration Formatter Helper (Days, Hours, Minutes)
         function formatDurationDHMS(totalMinutes) {
             const absMins = Math.abs(totalMinutes);
             const days = Math.floor(absMins / (24 * 60));
@@ -1975,279 +2924,258 @@
                 if (modalText) modalText.value = `ATTENTION: ${assignee},\n\nThis is a 2nd Strike formal notification regarding overdue Change Request ${crNumber}.\n\nThis change has exceeded the permitted post-implementation closure window. Failure to close this record within 24 hours will result in a formal escalation to your domain manager.\n\nPlease complete closure notes immediately.`;
             } else if (strikeLevel === 3) {
                 if (modalTitle) modalTitle.innerText = `Manager Escalation Email Draft`;
-                if (modalSubtitle) modalSubtitle.innerText = `Constructed Email to Domain Lead / Manager`;
-                if (modalText) modalText.value = `Subject: ESCALATION: Overdue Unclosed Change Request - ${crNumber}\n\nDear Domain Manager,\n\nWe are escalating overdue Change Request ${crNumber} assigned to ${assignee} which remains unclosed following CAB authorization and execution.\n\nChange Summary:\n- CR Number: ${crNumber}\n- Title: ${cr ? cr['Short description'] : ''}\n- Assignee: ${assignee}\n\nPlease instruct your team member to finalize post-implementation review and close the record in ServiceNow.\n\nRegards,\nValvoline Change Management`;
+                if (modalSubtitle) modalSubtitle.innerText = `Send to Domain Manager`;
+                if (modalText) modalText.value = `SUBJECT: MANAGER ESCALATION: Overdue Change Request Closure - ${crNumber}\n\nDear Manager,\n\nThe following Change Request assigned to ${assignee} is past its execution window and remains unclosed:\n\n- CR Number: ${crNumber}\n- Title: ${cr ? cr['Short description'] : ''}\n- Assignee: ${assignee}\n- State: Executed / Pending Closure\n\nMultiple reminders have been issued to the implementer without resolution. Please ensure your team member completes post-implementation review and marks the ticket closed in ServiceNow.\n\nValvoline Change Management Board`;
             }
 
             toggleNoticeModal();
-            renderClosableTab();
         }
 
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        function renderBiweeklyTrends() {
+            if (changeRequests.length === 0) return;
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+            const biweeklyMap = {};
 
-                    if (rawJson.length === 0) {
-                        showNotification("Uploaded Excel file is empty.", true);
-                        return;
-                    }
+            changeRequests.forEach(cr => {
+                const date = parseDate(cr.Opened);
+                if (isNaN(date.getTime())) return;
 
-                    changeRequests = rawJson.map(row => {
-                        const number = getRowField(row, 'Number') || getRowField(row, 'Change') || `CHG${Math.floor(100000 + Math.random() * 900000)}`;
-                        const title = getRowField(row, 'Short description') || getRowField(row, 'Short Description') || getRowField(row, 'Title') || 'No Title Provided';
-                        const desc = getRowField(row, 'Description') || 'No description provided';
-                        let type = getRowField(row, 'Type') || 'Normal';
-                        const originalState = getRowField(row, 'State') || 'Pending';
-                        const opened = parseDate(getRowField(row, 'Opened'));
-                        const pStart = parseDate(getRowField(row, 'Planned start date')) || parseDate(getRowField(row, 'Start Date'));
-                        const pEnd = parseDate(getRowField(row, 'Planned end date')) || parseDate(getRowField(row, 'End Date'));
-                        const assignee = getRowField(row, 'Assigned to') || getRowField(row, 'Assignee') || 'Unassigned';
+                const year = date.getFullYear();
+                const dayOfYear = Math.floor((date - new Date(year, 0, 0)) / 1000 / 60 / 60 / 24);
+                const biweeklyPeriodIndex = Math.floor(dayOfYear / 14);
+                
+                const periodStart = new Date(year, 0, 1 + (biweeklyPeriodIndex * 14));
+                const periodEnd = new Date(periodStart.getTime() + (13 * 86400000));
+                
+                const label = `${periodStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${periodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
 
-                        let syntaxExemption = false;
-                        if ((type.trim().toLowerCase() === 'standard') && (assignee.toLowerCase().includes('syntax') || title.toLowerCase().includes('syntax'))) {
-                            type = 'Normal';
-                            syntaxExemption = true;
-                        }
-
-                        return {
-                            "Number": number,
-                            "Short description": title,
-                            "Description": desc,
-                            "Type": type,
-                            "State": "Pending",
-                            "ServiceNowState": originalState,
-                            "Opened": opened,
-                            "Planned start date": pStart,
-                            "Planned end date": pEnd,
-                            "Assigned to": assignee,
-                            "Justification": getRowField(row, 'Justification') || 'N/A',
-                            "Implementation plan": getRowField(row, 'Implementation plan') || 'N/A',
-                            "Risk and impact analysis": getRowField(row, 'Risk and impact analysis') || 'N/A',
-                            "Backout plan": getRowField(row, 'Backout plan') || 'N/A',
-                            "Test plan": getRowField(row, 'Test plan') || 'N/A',
-                            "Comments and Work notes": getRowField(row, 'Comments and Work notes') || '',
-                            "syntaxExemptionApplied": syntaxExemption
-                        };
-                    });
-
-                    saveToLocalStorage();
-                    renderApp();
-                    showNotification(`Loaded ${changeRequests.length} Change Requests into Active Queue!`);
-                } catch (err) {
-                    console.error("XLSX parsing error:", err);
-                    showNotification("Failed to parse XLSX file: " + err.message, true);
+                if (!biweeklyMap[label]) {
+                    biweeklyMap[label] = {
+                        periodStart,
+                        total: 0,
+                        normal: 0,
+                        standard: 0,
+                        urgent: 0,
+                        emergency: 0,
+                        late: 0
+                    };
                 }
-            };
-            reader.readAsArrayBuffer(file);
-        }
 
-        function handleAuditFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+                const entry = biweeklyMap[label];
+                entry.total += 1;
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                const type = (cr.Type || 'Normal').trim().toLowerCase();
+                if (type === 'standard') entry.standard += 1;
+                else if (type === 'urgent') entry.urgent += 1;
+                else if (type === 'emergency') entry.emergency += 1;
+                else entry.normal += 1;
 
-                    if (rawJson.length === 0) {
-                        showNotification("Uploaded audit file is empty.", true);
-                        return;
-                    }
-
-                    auditRequests = rawJson.map(row => {
-                        const number = getRowField(row, 'Number') || getRowField(row, 'Change') || `CHG${Math.floor(100000 + Math.random() * 900000)}`;
-                        const title = getRowField(row, 'Short description') || getRowField(row, 'Short Description') || getRowField(row, 'Title') || 'No Title Provided';
-                        const pStart = parseDate(getRowField(row, 'Planned start date'));
-                        const aStart = parseDate(getRowField(row, 'Actual start date'));
-                        const pEnd = parseDate(getRowField(row, 'Planned end date'));
-                        const aEnd = parseDate(getRowField(row, 'Actual end date'));
-                        const assignee = getRowField(row, 'Assigned to') || getRowField(row, 'Assignee') || 'Unassigned';
-                        const group = getRowField(row, 'Assignment group') || getRowField(row, 'Assignment Group') || '';
-
-                        return {
-                            "Number": number,
-                            "Short description": title,
-                            "Planned start date": pStart,
-                            "Actual start date": aStart,
-                            "Planned end date": pEnd,
-                            "Actual end date": aEnd,
-                            "Assigned to": assignee,
-                            "Assignment group": group,
-                            "Justification": getRowField(row, 'Justification') || 'N/A',
-                            "Implementation plan": getRowField(row, 'Implementation plan') || 'N/A',
-                            "Risk and impact analysis": getRowField(row, 'Risk and impact analysis') || 'N/A',
-                            "Backout plan": getRowField(row, 'Backout plan') || 'N/A',
-                            "Test plan": getRowField(row, 'Test plan') || 'N/A',
-                            "Comments and Work notes": getRowField(row, 'Comments and Work notes') || ''
-                        };
-                    });
-
-                    saveToLocalStorage();
-                    renderAuditView();
-                    showNotification(`Loaded ${auditRequests.length} CRs into Quality Audit Hub!`);
-                } catch (err) {
-                    console.error("Audit XLSX parsing error:", err);
-                    showNotification("Failed to parse Audit XLSX file: " + err.message, true);
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        function handleClosableFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-
-                    if (rawJson.length === 0) {
-                        showNotification("Uploaded closable file is empty.", true);
-                        return;
-                    }
-
-                    closableRequests = rawJson.map(row => {
-                        return {
-                            "Number": getRowField(row, 'Number') || `CHG${Math.floor(100000 + Math.random() * 900000)}`,
-                            "Close code": getRowField(row, 'Close code') || getRowField(row, 'Close Code') || 'Successful',
-                            "Short description": getRowField(row, 'Short description') || getRowField(row, 'Short Description') || 'No Title Provided',
-                            "Type": getRowField(row, 'Type') || 'Normal',
-                            "State": getRowField(row, 'State') || 'Implemented',
-                            "Planned start date": parseDate(getRowField(row, 'Planned start date')),
-                            "Planned end date": parseDate(getRowField(row, 'Planned end date')),
-                            "Assigned to": getRowField(row, 'Assigned to') || 'Unassigned'
-                        };
-                    });
-
-                    saveToLocalStorage();
-                    renderClosableTab();
-                    showNotification(`Loaded ${closableRequests.length} CRs into Closable CR Manager!`);
-                } catch (err) {
-                    console.error("Closable XLSX parsing error:", err);
-                    showNotification("Failed to parse Closable XLSX file: " + err.message, true);
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        function exportCRs() {
-            if (changeRequests.length === 0) {
-                showNotification("No CR data to export.", true);
-                return;
-            }
-            const exportData = changeRequests.map(cr => ({
-                "Number": cr.Number,
-                "Short description": cr['Short description'],
-                "Description": cr.Description,
-                "Type": cr.Type,
-                "State": cr.State,
-                "Opened": formatDateStr(cr.Opened),
-                "Planned start date": formatDateStr(cr['Planned start date']),
-                "Planned end date": formatDateStr(cr['Planned end date']),
-                "Assigned to": cr['Assigned to'],
-                "Justification": cr.Justification,
-                "Implementation plan": cr['Implementation plan'],
-                "Risk and impact analysis": cr['Risk and impact analysis'],
-                "Backout plan": cr['Backout plan'],
-                "Test plan": cr['Test plan'],
-                "Reviewer Notes": reviewerNotesStore[cr.Number] || ''
-            }));
-
-            const ws = XLSX.utils.json_to_sheet(exportData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "CAB_Review_Export");
-            XLSX.writeFile(wb, `Valvoline_CAB_Review_Export_${new Date().toISOString().slice(0, 10)}.xlsx`);
-            showNotification("Exported Change Requests to Excel!");
-        }
-
-        function exportAuditReport() {
-            const dataset = auditRequests.length > 0 ? auditRequests : changeRequests;
-            if (dataset.length === 0) {
-                showNotification("No audit records to export.", true);
-                return;
-            }
-
-            const exportData = dataset.map(cr => {
-                const scores = auditScoresStore[cr.Number] || { doc: 1, timing: 1, evidence: 1, notes: 1 };
-                const total = Math.round(((scores.doc + scores.timing + scores.evidence + scores.notes) / 4) * 100);
-                return {
-                    "Change Number": cr.Number,
-                    "Short Description": cr['Short description'],
-                    "Assignee": cr['Assigned to'],
-                    "Fulfiller Group": cr['Assignment group'] || 'IT Domain Tower',
-                    "Documentation Score": scores.doc,
-                    "Timings Variance Score": scores.timing,
-                    "Post Evidence Score": scores.evidence,
-                    "Closure Notes Score": scores.notes,
-                    "Audit Score": `${total}%`
-                };
+                if (checkLateSubmission(cr).isLate) entry.late += 1;
             });
 
-            const ws = XLSX.utils.json_to_sheet(exportData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Quality_Audit_Scorecard");
-            XLSX.writeFile(wb, `Valvoline_Audit_Scorecard_${new Date().toISOString().slice(0, 10)}.xlsx`);
-            showNotification("Exported Quality Audit Scorecard!");
-        }
+            const sortedLabels = Object.keys(biweeklyMap).sort((a, b) => biweeklyMap[a].periodStart - biweeklyMap[b].periodStart);
 
-        function generateAuditTeamsNotice() {
-            const dataset = auditRequests.length > 0 ? auditRequests : changeRequests;
-            const targetAssignee = activeAuditAssigneeTab;
+            const totalCRs = changeRequests.length;
+            const avgVolume = Math.round(totalCRs / (sortedLabels.length || 1));
+            let peakLabel = "None";
+            let maxVol = 0;
+            let totalLate = 0;
+            let totalStd = 0;
 
-            let flaggedList = [];
-            dataset.forEach(cr => {
-                if (targetAssignee !== 'ALL' && cr['Assigned to'] !== targetAssignee) return;
-                const scores = auditScoresStore[cr.Number] || { doc: 1, timing: 1, evidence: 1, notes: 1 };
-                if (scores.doc === 0 || scores.timing === 0 || scores.evidence === 0 || scores.notes === 0) {
-                    flaggedList.push({ cr, scores });
+            sortedLabels.forEach(lbl => {
+                const b = biweeklyMap[lbl];
+                if (b.total > maxVol) {
+                    maxVol = b.total;
+                    peakLabel = `${lbl} (${maxVol} CRs)`;
                 }
+                totalLate += b.late;
+                totalStd += b.standard;
             });
 
-            const modalTitle = document.getElementById('notice-modal-title');
-            const modalSubtitle = document.getElementById('notice-modal-subtitle');
-            const modalText = document.getElementById('notice-modal-text');
+            const lateRate = Math.round((totalLate / (totalCRs || 1)) * 100);
+            const stdRatio = Math.round((totalStd / (totalCRs || 1)) * 100);
 
-            if (flaggedList.length === 0) {
-                if (modalTitle) modalTitle.innerText = `MS Teams Quality Audit Summary`;
-                if (modalSubtitle) modalSubtitle.innerText = `Target: ${targetAssignee}`;
-                if (modalText) modalText.value = `Hello ${targetAssignee},\n\nGreat job! All audited Change Requests assigned to you achieved 100% compliance on documentation, schedule adherence, and post-implementation evidence. Thank you for following standard ITSM procedures!`;
-            } else {
-                let msg = `Hello ${targetAssignee},\n\nThe following change request(s) assigned to you were randomly selected for a quality assurance review and have been identified with opportunities for improvement:\n\n`;
-                flaggedList.forEach(item => {
-                    msg += `• Change No: ${item.cr.Number} - ${item.cr['Short description']}\n`;
-                    if (item.scores.doc === 0) msg += `  - Documentation: Incomplete planning sections\n`;
-                    if (item.scores.timing === 0) msg += `  - Timings: Executed outside approved change window\n`;
-                    if (item.scores.evidence === 0) msg += `  - Post Evidence: Missing completion proof\n`;
-                    if (item.scores.notes === 0) msg += `  - Closure Notes: Lacks detailed post-implementation summary\n`;
-                    msg += `\n`;
+            const metricAvg = document.getElementById('biweekly-metric-avg');
+            const metricPeak = document.getElementById('biweekly-metric-peak');
+            const metricLate = document.getElementById('biweekly-metric-late-rate');
+            const metricStd = document.getElementById('biweekly-metric-std-ratio');
+
+            if (metricAvg) metricAvg.innerText = avgVolume;
+            if (metricPeak) metricPeak.innerText = peakLabel;
+            if (metricLate) metricLate.innerText = `${lateRate}%`;
+            if (metricStd) metricStd.innerText = `${stdRatio}%`;
+
+            const ctxVol = document.getElementById('chart-biweekly-volume')?.getContext('2d');
+            const ctxLate = document.getElementById('chart-biweekly-late')?.getContext('2d');
+
+            if (ctxVol) {
+                if (biweeklyVolumeChart) biweeklyVolumeChart.destroy();
+                biweeklyVolumeChart = new Chart(ctxVol, {
+                    type: 'bar',
+                    data: {
+                        labels: sortedLabels,
+                        datasets: [
+                            { label: 'Normal', data: sortedLabels.map(l => biweeklyMap[l].normal), backgroundColor: '#0891b2' },
+                            { label: 'Standard', data: sortedLabels.map(l => biweeklyMap[l].standard), backgroundColor: '#10b981' },
+                            { label: 'Urgent', data: sortedLabels.map(l => biweeklyMap[l].urgent), backgroundColor: '#f59e0b' },
+                            { label: 'Emergency', data: sortedLabels.map(l => biweeklyMap[l].emergency), backgroundColor: '#e11d48' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } }
+                    }
                 });
-                msg += `Please make sure to follow standard Change Enablement process moving forward as these changes were approved in CAB meetings.\n\nThank you!`;
-
-                if (modalTitle) modalTitle.innerText = `MS Teams Quality Audit Compliance Notice`;
-                if (modalSubtitle) modalSubtitle.innerText = `Target: ${targetAssignee}`;
-                if (modalText) modalText.value = msg;
             }
 
-            toggleNoticeModal();
+            if (ctxLate) {
+                if (biweeklyLateChart) biweeklyLateChart.destroy();
+                biweeklyLateChart = new Chart(ctxLate, {
+                    type: 'line',
+                    data: {
+                        labels: sortedLabels,
+                        datasets: [
+                            {
+                                label: 'Late Submissions',
+                                data: sortedLabels.map(l => biweeklyMap[l].late),
+                                borderColor: '#e11d48',
+                                backgroundColor: 'rgba(225, 29, 72, 0.1)',
+                                fill: true,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Total Submissions',
+                                data: sortedLabels.map(l => biweeklyMap[l].total),
+                                borderColor: '#0891b2',
+                                borderDash: [4, 4],
+                                fill: false,
+                                tension: 0.3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true } },
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } }
+                    }
+                });
+            }
+        }
+
+        function renderMonthlyUrgentTrends() {
+            const allUrgent = [];
+
+            changeRequests.forEach(cr => {
+                const type = (cr.Type || '').toLowerCase();
+                if (type === 'urgent' || type === 'emergency') {
+                    allUrgent.push({
+                        type: cr.Type,
+                        date: parseDate(cr.Opened),
+                        trigger: cr.Trigger || 'BusinessDeadline'
+                    });
+                }
+            });
+
+            approvedUrgentRequests.forEach(u => {
+                allUrgent.push({
+                    type: u.type,
+                    date: parseDate(u.approvalDate),
+                    trigger: u.trigger || 'Incident'
+                });
+            });
+
+            const monthlyMap = {};
+            const triggerMap = { 'Incident': 0, 'Security': 0, 'BusinessDeadline': 0, 'Administrative': 0 };
+
+            allUrgent.forEach(item => {
+                if (isNaN(item.date.getTime())) return;
+                const monthKey = item.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+
+                if (!monthlyMap[monthKey]) {
+                    monthlyMap[monthKey] = { date: item.date, urgent: 0, emergency: 0, total: 0 };
+                }
+
+                if ((item.type || '').toLowerCase() === 'emergency') {
+                    monthlyMap[monthKey].emergency += 1;
+                } else {
+                    monthlyMap[monthKey].urgent += 1;
+                }
+                monthlyMap[monthKey].total += 1;
+
+                const trg = item.trigger || 'Incident';
+                if (triggerMap[trg] !== undefined) triggerMap[trg] += 1;
+                else triggerMap['BusinessDeadline'] += 1;
+            });
+
+            const sortedMonths = Object.keys(monthlyMap).sort((a, b) => monthlyMap[a].date - monthlyMap[b].date);
+
+            const totalCount = allUrgent.length;
+            const totalIncidents = triggerMap['Incident'] || 0;
+            const securityRatio = Math.round(((triggerMap['Security'] || 0) / (totalCount || 1)) * 100);
+
+            let peakMonth = "None";
+            let maxMVol = 0;
+            sortedMonths.forEach(m => {
+                if (monthlyMap[m].total > maxMVol) {
+                    maxMVol = monthlyMap[m].total;
+                    peakMonth = `${m} (${maxMVol})`;
+                }
+            });
+
+            const mTotal = document.getElementById('urgent-metric-total');
+            const mIncidents = document.getElementById('urgent-metric-incidents');
+            const mSecurity = document.getElementById('urgent-metric-security');
+            const mPeak = document.getElementById('urgent-metric-peak-month');
+
+            if (mTotal) mTotal.innerText = totalCount;
+            if (mIncidents) mIncidents.innerText = totalIncidents;
+            if (mSecurity) mSecurity.innerText = `${securityRatio}%`;
+            if (mPeak) mPeak.innerText = peakMonth;
+
+            const ctxMonthly = document.getElementById('chart-urgent-monthly')?.getContext('2d');
+            const ctxTrigger = document.getElementById('chart-urgent-trigger')?.getContext('2d');
+
+            if (ctxMonthly) {
+                if (urgentMonthlyChart) urgentMonthlyChart.destroy();
+                urgentMonthlyChart = new Chart(ctxMonthly, {
+                    type: 'bar',
+                    data: {
+                        labels: sortedMonths.length > 0 ? sortedMonths : ['Current Month'],
+                        datasets: [
+                            { label: 'Urgent Change (<24h)', data: sortedMonths.map(m => monthlyMap[m].urgent), backgroundColor: '#f59e0b' },
+                            { label: 'Emergency Change (MI/P1)', data: sortedMonths.map(m => monthlyMap[m].emergency), backgroundColor: '#e11d48' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true } },
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } }
+                    }
+                });
+            }
+
+            if (ctxTrigger) {
+                if (urgentTriggerChart) urgentTriggerChart.destroy();
+                urgentTriggerChart = new Chart(ctxTrigger, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Major Incident (P1/P2)', 'Security Vulnerability', 'Business Deadline', 'Admin Delay Check'],
+                        datasets: [{
+                            data: [triggerMap['Incident'], triggerMap['Security'], triggerMap['BusinessDeadline'], triggerMap['Administrative']],
+                            backgroundColor: ['#e11d48', '#f59e0b', '#0891b2', '#64748b']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
+                    }
+                });
+            }
         }
 
         function loadDemoData() {
@@ -2263,7 +3191,7 @@
                     "Type": "Normal",
                     "State": "Pending",
                     "ServiceNowState": "Scheduled",
-                    "Opened": new Date(now.getTime() - 86400000 * 2),
+                    "Opened": new Date(now.getTime() - 86400000 * 18),
                     "Planned start date": futureStart,
                     "Planned end date": futureEnd,
                     "Assigned to": "Himanshu Prajapat",
@@ -2282,7 +3210,7 @@
                     "Type": "Normal",
                     "State": "Pending",
                     "ServiceNowState": "Assess",
-                    "Opened": new Date(now.getTime() - 86400000 * 1),
+                    "Opened": new Date(now.getTime() - 86400000 * 5),
                     "Planned start date": new Date(now.getTime() + 86400000 * 4),
                     "Planned end date": new Date(now.getTime() + 86400000 * 4 + 3600000),
                     "Assigned to": "Syntax eBonding Integration",
@@ -2293,6 +3221,25 @@
                     "Test plan": "Send test synthetic payload and verify 200 OK.",
                     "Comments and Work notes": "",
                     "syntaxExemptionApplied": true
+                },
+                {
+                    "Number": "CHG0053101",
+                    "Short description": "POS Store Terminal Gateway Security Certificate Renewal",
+                    "Description": "Emergency renewal of expiring TLS certificates for 1,200 store POS terminals.",
+                    "Type": "Urgent",
+                    "State": "Pending",
+                    "ServiceNowState": "Authorize",
+                    "Opened": new Date(now.getTime() - 86400000 * 2),
+                    "Planned start date": new Date(now.getTime() + 3600000 * 6),
+                    "Planned end date": new Date(now.getTime() + 3600000 * 10),
+                    "Assigned to": "Network Security Team",
+                    "Justification": "Prevent store point-of-sale transaction failures.",
+                    "Implementation plan": "1. Push cert via MDM\n2. Verify TLS handshake.",
+                    "Risk and impact analysis": "Low risk. Validated in UAT lab.",
+                    "Backout plan": "Rollback to backup TLS cert profile.",
+                    "Test plan": "Tested in 5 pilot stores successfully.",
+                    "Comments and Work notes": "",
+                    "syntaxExemptionApplied": false
                 }
             ];
 
@@ -2493,7 +3440,7 @@ Evaluate:
             lucide.createIcons();
 
             const crContext = JSON.stringify(changeRequests.slice(0, 5));
-            const sysPrompt = `You are Alex, an expert Co-Change Manager for Valvoline ITIL Change Advisory Board. You assist with Change Requests, cutoff rules (Tuesday 10 AM EST / Thursday 11 AM EST; Cutoff 6:00 AM EST), Urgent/Emergency RTI rules, Syntax eBonding exemptions, and audit quality scorecards. Current loaded CR context sample: ${crContext}`;
+            const sysPrompt = `You are Kimmy, an expert Co-Change Manager for Valvoline ITIL Change Advisory Board. You assist with Change Requests, cutoff rules (Tuesday 10 AM EST / Thursday 11 AM EST; Cutoff 6:00 AM EST), Urgent/Emergency RTI rules, Syntax eBonding exemptions, and audit quality scorecards. Current loaded CR context sample: ${crContext}`;
 
             const result = await callGeminiAPI(userText, sysPrompt, groundingToggle ? groundingToggle.checked : false);
 
@@ -2532,16 +3479,36 @@ Evaluate:
             renderAuditView();
             renderClosableTab();
 
-            // Update Badges
             const pendingCount = changeRequests.filter(c => c.State === 'Pending').length;
             const reviewedCount = changeRequests.filter(c => c.State === 'Marked As Reviewed').length;
             const approvedCount = changeRequests.filter(c => c.State === 'CAB Approved').length;
             const rejectedCount = changeRequests.filter(c => c.State === 'Rejected' || c.State === 'Canceled').length;
             const lateCount = changeRequests.filter(c => checkLateSubmission(c).isLate).length;
-            const urgentCount = changeRequests.filter(c => c.Type === 'Urgent' || c.Type === 'Emergency').length;
+            
+            const queueUrgentCount = changeRequests.filter(c => (c.Type || '').toLowerCase() === 'urgent' || (c.Type || '').toLowerCase() === 'emergency').length;
+            const totalUrgentCount = queueUrgentCount + approvedUrgentRequests.length;
+
+            const assigneesSet = new Set();
+            changeRequests.forEach(c => {
+                if (c['Assigned to']) assigneesSet.add(c['Assigned to']);
+            });
+
+            const closableDataset = closableRequests.length > 0 ? closableRequests : changeRequests.filter(c => c.State === 'Marked As Reviewed' || c.State === 'CAB Approved');
 
             const badgeTotal = document.getElementById('badge-total-crs');
             if (badgeTotal) badgeTotal.innerText = changeRequests.length;
+
+            const badgeUrgent = document.getElementById('badge-urgent-count');
+            if (badgeUrgent) badgeUrgent.innerText = totalUrgentCount;
+
+            const badgeApprovedUrgentLog = document.getElementById('badge-approved-urgent-log');
+            if (badgeApprovedUrgentLog) badgeApprovedUrgentLog.innerText = approvedUrgentRequests.length;
+
+            const badgeAssignees = document.getElementById('badge-assignees-count');
+            if (badgeAssignees) badgeAssignees.innerText = assigneesSet.size;
+
+            const badgeClosable = document.getElementById('badge-closable-count');
+            if (badgeClosable) badgeClosable.innerText = closableDataset.length;
 
             const statPending = document.getElementById('stat-pending');
             if (statPending) statPending.innerText = pendingCount;
@@ -2557,12 +3524,6 @@ Evaluate:
 
             const statLate = document.getElementById('stat-late');
             if (statLate) statLate.innerText = lateCount;
-
-            const badgeUrgent = document.getElementById('badge-urgent-count');
-            if (badgeUrgent) badgeUrgent.innerText = urgentCount;
-
-            const badgeClosable = document.getElementById('badge-closable-count');
-            if (badgeClosable) badgeClosable.innerText = closableRequests.length;
 
             lucide.createIcons();
         }
@@ -2583,3 +3544,4 @@ Evaluate:
     </script>
 </body>
 </html>
+```e-c-o-f
